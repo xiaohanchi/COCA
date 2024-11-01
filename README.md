@@ -3,7 +3,7 @@ R code for implementing the COCA design.
 
 
 ### Repository Contents
-
+* calibration.R: get calibrated stage 2 sample size and design cutoffs
 
 
 ### Authors and Reference
