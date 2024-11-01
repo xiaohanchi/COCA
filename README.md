@@ -1,9 +1,15 @@
 # COCA
 R code for implementing the COCA design. 
 
+### Session Information
+R version 4.3.1 was used for the simulations. Bayesian MCMC sampling were done by rjags (Download JAGS from
+https://sourceforge.net/projects/mcmc-jags/). 
+
 
 ### Repository Contents
-* calibration.R: get calibrated stage 2 sample size and design cutoffs
+* scenarios.R: simulation scenarios
+* calibration.R: get calibrated stage 2 sample size and design cutoffs. More detail is commented out at the beginning of each function. 
+* run_COCA.R: run COCA design and get the summarized results. More detail is commented out at the beginning of each function. 
 
 
 ### Authors and Reference
