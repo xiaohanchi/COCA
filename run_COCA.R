@@ -76,6 +76,9 @@ comb <- function(x, ...) {
 }
 
 get.COCAresult <- function(output.Rdata, scenario.idx) {
+  ### output.Rdata: output Rdata file from the run.COCA.period function
+  ### scenario.idx: scenario index for a specific scenario in scenarios.R file
+  
   sn_all <- 5000
   Nmax <- c(24, switch(fda_sc,
     26,
