@@ -1,2 +1,4 @@
+^renv$
+^renv\.lock$
 ^COCA\.Rproj$
 ^\.Rproj\.user$
