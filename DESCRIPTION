@@ -2,7 +2,9 @@ Package: COCA
 Title: Bayesian Design Integrating Dose Optimization and Component Contribution Assessment for Combination Therapies
 Version: 0.0.0.9000
 Authors@R: 
-    person("Xiaohan", "Chi", , "xchi@mdanderson.org", role = c("aut", "cre"))
+    c(person("Xiaohan", "Chi", , "xchi@mdanderson.org", role = c("aut", "cre")),
+    person("Ruitao", "Lin", , "rlin@mdanderson.org", role = c("aut")),
+    person("Ying", "Yuan", , "yyuan@mdanderson.org", role = c("aut")))
 Description: R code for implementing the COCA design
 License: MIT + file LICENSE
 Encoding: UTF-8
