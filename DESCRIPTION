@@ -1,9 +1,9 @@
 Package: COCA
-Title: What the Package Does (One Line, Title Case)
+Title: Bayesian Design Integrating Dose Optimization and Component Contribution Assessment for Combination Therapies
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Xiaohan", "Chi", , "xchi@mdanderson.org", role = c("aut", "cre"))
+Description: R code for implementing the COCA design
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
