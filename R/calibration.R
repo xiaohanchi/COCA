@@ -15,7 +15,7 @@
 #' @param seed Random seed
 #' @param n.simu Number of simulation replicates
 #'
-#' @return BCI's
+#' @return Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{k}, and the corresponding power and type I error rates.
 #'
 #' @examples
 #'
@@ -24,14 +24,13 @@
 #'
 #' # For a grid search, try:
 #' n.stage2 <- 10:20
-#' for(i in 1:length(n.stage2)){
-#'   if(i == 1){
+#' for (i in 1:length(n.stage2)) {
+#'   if (i == 1) {
 #'     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
 #'   } else {
 #'     output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
 #'     output <- bind_rows(output, output.tmp)
 #'   }
-#'
 #' }
 #'
 
@@ -49,12 +48,12 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
                              fsr.level = 0.05, tsr.level = 0.80,
                              seed = 123, n.simu = 20) {
   runjags.options(
-    inits.warning=FALSE, rng.warning=FALSE, silent.jags = TRUE, silent.runjags = TRUE
+    inits.warning = FALSE, rng.warning = FALSE, silent.jags = TRUE, silent.runjags = TRUE
   )
 
   summary_tab <- tibble(
     case = case, n.stage2 = n.stage2,
-    Ce1 = NA, k = NA, Power = NA, Power_p = NA, TypeI = NA, TypeI_p = NA
+    Ce1 = NA, k = NA, Power = NA, TypeI = NA, TypeI_p = NA
   )
 
   cat("#1: Null Scneario \n")
@@ -87,9 +86,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
     type1.period[pp] <- length(which(BCI_period[[pp]][1, ] > Ce1_0)) / dim(BCI_period[[pp]])[2]
   }
 
-  power_p <- (length(which(BCI_alt[1, ] > max(Ce1_p))) / dim(BCI_alt)[2]) %>% round(., 4)
-
-  Ce1 <- max(Ce1_0,max(Ce1_p))
+  Ce1 <- max(Ce1_0, max(Ce1_p))
   Ce.k.lower <- .find_klower(
     fda.case = case,
     k.min = 0.1, Ce.1 = Ce1, BCI = BCI_null, level = fsr.level
@@ -103,14 +100,13 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
     ) %>% suppressWarnings()
   }
 
-  if(Ce.k == -1){
+  if (Ce.k == -1) {
     warning("No k value fulfilling the condition was found. Consider increasing the sample size.")
   }
 
   summary_tab$Ce1 <- Ce1
   summary_tab$k <- Ce.k
   summary_tab$Power <- power
-  summary_tab$Power_p <- power_p
   summary_tab$TypeI <- (length(which(BCI_null[1, ] > Ce1)) / dim(BCI_null)[2]) %>% round(., 4)
   summary_tab$TypeI_p <- max(type1.period)
 
@@ -409,4 +405,3 @@ run.period <- function(fda.case = 1, n.stage1 = 24, n.stage2,
   }
   return(BCI_c_batch)
 }
-

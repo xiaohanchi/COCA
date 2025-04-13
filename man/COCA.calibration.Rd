@@ -51,7 +51,7 @@ COCA.calibration(
 \item{n.simu}{Number of simulation replicates}
 }
 \value{
-BCI's
+Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{k}, and the corresponding power and type I error rates.
 }
 \description{
 COCA Calibration
@@ -63,14 +63,13 @@ COCA.calibration(case = 1, n.stage2 = 20)
 
 # For a grid search, try:
 n.stage2 <- 10:20
-for(i in 1:length(n.stage2)){
-  if(i == 1){
+for (i in 1:length(n.stage2)) {
+  if (i == 1) {
     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
   } else {
     output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
     output <- bind_rows(output, output.tmp)
   }
-
 }
 
 }
