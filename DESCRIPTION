@@ -1,5 +1,5 @@
 Package: COCA
-Title: Bayesian Design Integrating Dose Optimization and Component Contribution Assessment for Combination Therapies
+Title: Dose Optimization and Component Contribution Assessment for Combination Therapies
 Version: 0.0.0.9000
 Authors@R: 
     c(person("Xiaohan", "Chi", , "xchi@mdanderson.org", role = c("aut", "cre")),
