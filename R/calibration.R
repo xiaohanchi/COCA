@@ -2,10 +2,16 @@
 #'
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
 #' @param n.stage2 Sample size for stage 2
-#' @param lower.eff Lowest acceptable efficacy rate
+#' @param eff.null Unpromising efficacy rate (\eqn{\widetilde{q}_1}) in the global null hypothesis
+#' @param eff.alt.SOC Efficacy rate of the SOC arm (\eqn{\widetilde{q}_{SOC}}) in the alternative hypothesis
+#' @param eff.alt.A Efficacy rate of single arm A (\eqn{\widetilde{q}_{A}}) in the alternative hypothesis. This argument is ignored if arm A is not included.
+#' @param eff.alt.B Efficacy rate of single arm B (\eqn{\widetilde{q}_{B}}) in the alternative hypothesis. This argument is ignored if arm B is not included.
+#' @param eff.alt.AB Efficacy rate of combination arm AB (\eqn{\widetilde{q}_{AB}}) in the alternative hypothesis.
 #' @param period.effect Vector of possible period effects
 #' @param alpha.level Type I error level (\eqn{\alpha_0}) under no period effect assumption
 #' @param alpha.max Maximum type I error level (\eqn{\alpha_{\max}}) under non-zero period effect
+#' @param fsr.level False success rate level (\eqn{\gamma_0}) under no period effect assumption
+#' @param tsr.level Target true success rate (\eqn{\zeta_0}) under no period effect assumption
 #' @param seed Random seed
 #' @param n.simu Number of simulation replicates
 #'
@@ -14,15 +20,15 @@
 #' @examples
 #'
 #' # To calibrate for a specific sample size candidate, run:
-#' COCA.calibration(case = 1, n.stage2 = 20, lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+#' COCA.calibration(case = 1, n.stage2 = 20)
 #'
 #' # For a grid search, try:
 #' n.stage2 <- 10:20
 #' for(i in 1:length(n.stage2)){
 #'   if(i == 1){
-#'     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i], lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+#'     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
 #'   } else {
-#'     output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i], lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+#'     output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
 #'     output <- bind_rows(output, output.tmp)
 #'   }
 #'
@@ -35,9 +41,12 @@
 #' @import runjags
 #' @export
 #'
-COCA.calibration <- function(case, n.stage2, lower.eff = 0.25,
+COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
+                             eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+                             eff.alt.B = 0.35, eff.alt.AB = 0.55,
                              period.effect = c(0.1, 0.2, 0.3),
                              alpha.level = 0.10, alpha.max = 0.20,
+                             fsr.level = 0.05, tsr.level = 0.80,
                              seed = 123, n.simu = 20) {
   runjags.options(
     inits.warning=FALSE, rng.warning=FALSE, silent.jags = TRUE, silent.runjags = TRUE
@@ -51,17 +60,17 @@ COCA.calibration <- function(case, n.stage2, lower.eff = 0.25,
   cat("#1: Null Scneario \n")
   BCI_null <- run.whole(
     fda.case = case, n.stage2 = n.stage2,
-    eff.ctrl = lower.eff, eff.A = lower.eff, eff.B = lower.eff, eff.AB = lower.eff,
+    eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
     batch.idx = seed, batch.sn = n.simu
   )
   cat("#2: Alternative Scneario \n")
   BCI_alt <- run.whole(
     fda.case = case, n.stage2 = n.stage2,
-    eff.ctrl = lower.eff, eff.A = 0.35, eff.B = 0.35, eff.AB = 0.55,
+    eff.ctrl = eff.alt.SOC, eff.A = eff.alt.A, eff.B = eff.alt.B, eff.AB = eff.alt.AB,
     batch.idx = seed, batch.sn = n.simu
   )
 
-  Ce1_0 <- round(quantile(BCI_null[1, ], 0.9), digits = 4)
+  Ce1_0 <- round(quantile(BCI_null[1, ], (1 - alpha.level)), digits = 4)
   power <- (length(which(BCI_alt[1, ] > Ce1_0)) / dim(BCI_alt)[2]) %>% round(., 4)
 
   cat("#3: Period Effect \n")
@@ -70,7 +79,7 @@ COCA.calibration <- function(case, n.stage2, lower.eff = 0.25,
   for (pp in 1:length(period.effect)) {
     BCI_period[[pp]] <- run.period(
       fda.case = case, n.stage2 = n.stage2,
-      eff.ctrl = lower.eff, eff.A = lower.eff, eff.B = lower.eff, eff.AB = lower.eff,
+      eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
       period_eff = period.effect[pp],
       batch.idx = seed, batch.sn = n.simu
     )
@@ -83,16 +92,21 @@ COCA.calibration <- function(case, n.stage2, lower.eff = 0.25,
   Ce1 <- max(Ce1_0,max(Ce1_p))
   Ce.k.lower <- .find_klower(
     fda.case = case,
-    k.min = 0.1, Ce.1 = Ce1, BCI = BCI_null, level = 0.05
-  )
+    k.min = 0.1, Ce.1 = Ce1, BCI = BCI_null, level = fsr.level
+  ) %>% suppressWarnings()
   if (Ce.k.lower == -1) {
     Ce.k <- -1
   } else {
     Ce.k <- .find_kupper(
       fda.case = case,
-      k.min = Ce.k.lower, Ce.1 = Ce1, BCI = BCI_alt, level = 0.80
-    )
+      k.min = Ce.k.lower, Ce.1 = Ce1, BCI = BCI_alt, level = tsr.level
+    ) %>% suppressWarnings()
   }
+
+  if(Ce.k == -1){
+    warning("No k value fulfilling the condition was found. Consider increasing the sample size.")
+  }
+
   summary_tab$Ce1 <- Ce1
   summary_tab$k <- Ce.k
   summary_tab$Power <- power

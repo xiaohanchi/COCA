@@ -7,10 +7,16 @@
 COCA.calibration(
   case,
   n.stage2,
-  lower.eff = 0.25,
+  eff.null = 0.25,
+  eff.alt.SOC = 0.25,
+  eff.alt.A = 0.35,
+  eff.alt.B = 0.35,
+  eff.alt.AB = 0.55,
   period.effect = c(0.1, 0.2, 0.3),
   alpha.level = 0.1,
   alpha.max = 0.2,
+  fsr.level = 0.05,
+  tsr.level = 0.8,
   seed = 123,
   n.simu = 20
 )
@@ -20,13 +26,25 @@ COCA.calibration(
 
 \item{n.stage2}{Sample size for stage 2}
 
-\item{lower.eff}{Lowest acceptable efficacy rate}
+\item{eff.null}{Unpromising efficacy rate (\eqn{\widetilde{q}_1}) in the global null hypothesis}
+
+\item{eff.alt.SOC}{Efficacy rate of the SOC arm (\eqn{\widetilde{q}_{SOC}}) in the alternative hypothesis}
+
+\item{eff.alt.A}{Efficacy rate of single arm A (\eqn{\widetilde{q}_{A}}) in the alternative hypothesis. This argument is ignored if arm A is not included.}
+
+\item{eff.alt.B}{Efficacy rate of single arm B (\eqn{\widetilde{q}_{B}}) in the alternative hypothesis. This argument is ignored if arm B is not included.}
+
+\item{eff.alt.AB}{Efficacy rate of combination arm AB (\eqn{\widetilde{q}_{AB}}) in the alternative hypothesis.}
 
 \item{period.effect}{Vector of possible period effects}
 
 \item{alpha.level}{Type I error level (\eqn{\alpha_0}) under no period effect assumption}
 
 \item{alpha.max}{Maximum type I error level (\eqn{\alpha_{\max}}) under non-zero period effect}
+
+\item{fsr.level}{False success rate level (\eqn{\gamma_0}) under no period effect assumption}
+
+\item{tsr.level}{Target true success rate (\eqn{\zeta_0}) under no period effect assumption}
 
 \item{seed}{Random seed}
 
@@ -41,15 +59,15 @@ COCA Calibration
 \examples{
 
 # To calibrate for a specific sample size candidate, run:
-COCA.calibration(case = 1, n.stage2 = 20, lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+COCA.calibration(case = 1, n.stage2 = 20)
 
 # For a grid search, try:
 n.stage2 <- 10:20
 for(i in 1:length(n.stage2)){
   if(i == 1){
-    output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i], lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+    output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
   } else {
-    output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i], lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+    output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
     output <- bind_rows(output, output.tmp)
   }
 
