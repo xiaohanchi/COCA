@@ -51,7 +51,7 @@ COCA.calibration(
 \item{n.simu}{Number of simulation replicates}
 }
 \value{
-Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{k}, and the corresponding power and type I error rates.
+Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
 }
 \description{
 COCA Calibration

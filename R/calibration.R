@@ -15,7 +15,7 @@
 #' @param seed Random seed
 #' @param n.simu Number of simulation replicates
 #'
-#' @return Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{k}, and the corresponding power and type I error rates.
+#' @return Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
 #'
 #' @examples
 #'
@@ -53,7 +53,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
 
   summary_tab <- tibble(
     case = case, n.stage2 = n.stage2,
-    Ce1 = NA, k = NA, Power = NA, TypeI = NA, TypeI_p = NA
+    Ce1 = NA, c0 = NA, Power = NA, TypeI = NA, TypeI_p = NA
   )
 
   cli_alert("Null Scneario: in process")
@@ -109,7 +109,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
   }
 
   summary_tab$Ce1 <- Ce1
-  summary_tab$k <- Ce.k
+  summary_tab$c0 <- Ce.k
   summary_tab$Power <- power
   summary_tab$TypeI <- (length(which(BCI_null[1, ] > Ce1)) / dim(BCI_null)[2]) %>% round(., 4)
   summary_tab$TypeI_p <- max(type1.period)
