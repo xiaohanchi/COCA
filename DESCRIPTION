@@ -13,5 +13,7 @@ RoxygenNote: 7.3.2
 Suggests: 
     renv
 Imports: 
+    progress,
     rjags,
-    runjags
+    runjags,
+    tibble
