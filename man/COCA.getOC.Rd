@@ -37,9 +37,7 @@ COCA.getOC(
 
 \item{n.stage2}{Sample size for stage 2}
 
-\item{Ce}{Design cutoff, obtained using \code{COCA.calibration} fucntion.}
-
-\item{c0}{Design cutoff, obtained using \code{COCA.calibration} fucntion.}
+\item{Ce, c0}{Design cutoffs, obtained using the \code{COCA.calibration} function.}
 
 \item{tox.SOC, tox.A, tox.B}{True toxicity probabilities for SOC, arm A, and arm B.}
 
@@ -57,13 +55,13 @@ COCA.getOC(
 
 \item{C.f1, C.f2}{Probability cutoffs in stage 2}
 
-\item{utility.score}{Vector of utility score: \code{(b1, b2, b3, b4)} represents the utility for (toxicity, no efficacy), (no toxicity, no efficacy), (toxicity, efficacy), and (no toxicity, efficacy), respectively.}
+\item{utility.score}{Vector of utility score: \code{c(b1, b2, b3, b4)} represents the utility for (toxicity, no efficacy), (no toxicity, no efficacy), (toxicity, efficacy), and (no toxicity, efficacy), respectively.}
 
 \item{rho}{Correlation between toxicity and efficacy}
 
 \item{period.effect}{Period effect}
 
-\item{n.simu}{Number of simulation replicates}
+\item{n.simu}{Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.}
 
 \item{seed}{Random seed}
 }
@@ -74,5 +72,42 @@ Returns the operating characteristics of stage 1 (selection and expected sample 
 COCA Simulation
 }
 \examples{
-COCA.getOC(n.stage2 = 26, Ce = 0.8983, c0 = 0.7)
+# \code{n.simu = 20} is used for illustration purposes. For more accurate results,
+# consider using a larger value for \code{n.simu}, such as 5000.
+# Scenario 1 (period effect = 0)
+COCA.getOC(
+  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  tox.SOC = 0.10, eff.SOC = 0.25,
+  tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.25, eff.B = 0.25,
+  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
+  period.effect = 0, n.simu = 20
+)
+# Scenario 1 (period effect = 0.2)
+COCA.getOC(
+  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  tox.SOC = 0.10, eff.SOC = 0.25,
+  tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.25, eff.B = 0.25,
+  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
+  period.effect = 0.2, n.simu = 20
+)
+# Scenario 2 (period effect = 0)
+COCA.getOC(
+  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  tox.SOC = 0.10, eff.SOC = 0.25,
+  tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.35, eff.B = 0.35,
+  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
+  period.effect = 0, n.simu = 20
+)
+# Scenario 2 (period effect = 0.2)
+COCA.getOC(
+  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  tox.SOC = 0.10, eff.SOC = 0.25,
+  tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.35, eff.B = 0.35,
+  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
+  period.effect = 0.2, n.simu = 20
+)
 }

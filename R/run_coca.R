@@ -3,9 +3,7 @@
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
 #' @param n.stage1 Sample size for stage 1
 #' @param n.stage2 Sample size for stage 2
-#' @param Ce Design cutoff, obtained using \code{COCA.calibration} fucntion.
-#' @param c0 Design cutoff, obtained using \code{COCA.calibration} fucntion.
-#' @param n.stage2 Sample size for stage 2
+#' @param Ce,c0 Design cutoffs, obtained using the \code{COCA.calibration} function.
 #' @param tox.SOC,tox.A,tox.B True toxicity probabilities for SOC, arm A, and arm B.
 #' @param tox.AB A vector of true toxicity probabilities for all combination doses being tested in the trial.
 #' @param eff.SOC,eff.A,eff.B True efficacy probabilities for SOC, arm A, and arm B.
@@ -14,15 +12,13 @@
 #' @param eff.lower Lowest acceptable efficacy rate (\eqn{\phi_{E}})
 #' @param Cs Probability cutoff in stage 1
 #' @param C.f1,C.f2 Probability cutoffs in stage 2
-#' @param utility.score Vector of utility score: \code{(b1, b2, b3, b4)} represents the utility for (toxicity, no efficacy), (no toxicity, no efficacy), (toxicity, efficacy), and (no toxicity, efficacy), respectively.
+#' @param utility.score Vector of utility score: \code{c(b1, b2, b3, b4)} represents the utility for (toxicity, no efficacy), (no toxicity, no efficacy), (toxicity, efficacy), and (no toxicity, efficacy), respectively.
 #' @param rho Correlation between toxicity and efficacy
 #' @param period.effect Period effect
-#' @param n.simu Number of simulation replicates
+#' @param n.simu Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.
 #' @param seed Random seed
-
 #'
 #' @return Returns the operating characteristics of stage 1 (selection and expected sample size) and stage 2 (power, GP, SR, OSR, and expected sample size).
-
 #' @import cli
 #' @import tibble
 #' @import rjags
@@ -30,9 +26,46 @@
 #' @export
 #'
 #' @examples
-#' COCA.getOC(n.stage2 = 26, Ce = 0.8983, c0 = 0.7)
-COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2,
-                       Ce, c0,
+#' # \code{n.simu = 20} is used for illustration purposes. For more accurate results,
+#' # consider using a larger value for \code{n.simu}, such as 5000.
+#' # Scenario 1 (period effect = 0)
+#' COCA.getOC(
+#'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   tox.SOC = 0.10, eff.SOC = 0.25,
+#'   tox.A = 0.25, tox.B = 0.15,
+#'   eff.A = 0.25, eff.B = 0.25,
+#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
+#'   period.effect = 0, n.simu = 20
+#' )
+#' # Scenario 1 (period effect = 0.2)
+#' COCA.getOC(
+#'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   tox.SOC = 0.10, eff.SOC = 0.25,
+#'   tox.A = 0.25, tox.B = 0.15,
+#'   eff.A = 0.25, eff.B = 0.25,
+#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
+#'   period.effect = 0.2, n.simu = 20
+#' )
+#' # Scenario 2 (period effect = 0)
+#' COCA.getOC(
+#'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   tox.SOC = 0.10, eff.SOC = 0.25,
+#'   tox.A = 0.25, tox.B = 0.15,
+#'   eff.A = 0.35, eff.B = 0.35,
+#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
+#'   period.effect = 0, n.simu = 20
+#' )
+#' # Scenario 2 (period effect = 0.2)
+#' COCA.getOC(
+#'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   tox.SOC = 0.10, eff.SOC = 0.25,
+#'   tox.A = 0.25, tox.B = 0.15,
+#'   eff.A = 0.35, eff.B = 0.35,
+#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
+#'   period.effect = 0.2, n.simu = 20
+#' )
+
+COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
                        tox.SOC = 0.10, eff.SOC = 0.25,
                        tox.A = 0.25, tox.B = 0.15,
                        eff.A = 0.25, eff.B = 0.25,
