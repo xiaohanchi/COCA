@@ -1,6 +1,5 @@
 
 library(readr)
-library(filelock)
 library(rjags)
 library(runjags)
 
