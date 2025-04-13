@@ -39,5 +39,20 @@ BCI's
 COCA Calibration
 }
 \examples{
+
+# To calibrate for a specific sample size candidate, run:
 COCA.calibration(case = 1, n.stage2 = 20, lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+
+# For a grid search, try:
+n.stage2 <- 10:20
+for(i in 1:length(n.stage2)){
+  if(i == 1){
+    output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i], lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+  } else {
+    output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i], lower.eff = 0.25, period.effect = c(0.1, 0.2, 0.3), seed = 123)
+    output <- bind_rows(output, output.tmp)
+  }
+
+}
+
 }
