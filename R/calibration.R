@@ -34,7 +34,7 @@
 #' }
 #'
 
-#' @import progress
+#' @import cli
 #' @import tibble
 #' @import rjags
 #' @import runjags
@@ -56,23 +56,26 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
     Ce1 = NA, k = NA, Power = NA, TypeI = NA, TypeI_p = NA
   )
 
-  cat("#1: Null Scneario \n")
+  cli_alert("Null Scneario: in process")
   BCI_null <- run.whole(
     fda.case = case, n.stage2 = n.stage2,
     eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
     batch.idx = seed, batch.sn = n.simu
   )
-  cat("#2: Alternative Scneario \n")
+  cli_alert_info("Null Scneario: done")
+
+  cli_alert("Alternative Scneario: in process")
   BCI_alt <- run.whole(
     fda.case = case, n.stage2 = n.stage2,
     eff.ctrl = eff.alt.SOC, eff.A = eff.alt.A, eff.B = eff.alt.B, eff.AB = eff.alt.AB,
     batch.idx = seed, batch.sn = n.simu
   )
+  cli_alert_info("Alternative Scneario: done")
 
   Ce1_0 <- round(quantile(BCI_null[1, ], (1 - alpha.level)), digits = 4)
   power <- (length(which(BCI_alt[1, ] > Ce1_0)) / dim(BCI_alt)[2]) %>% round(., 4)
 
-  cat("#3: Period Effect \n")
+  cli_alert("Period Effect: in process")
   BCI_period <- list()
   Ce1_p <- type1.period <- c()
   for (pp in 1:length(period.effect)) {
@@ -85,6 +88,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
     Ce1_p[pp] <- round(quantile(BCI_period[[pp]][1, ], (1 - alpha.max)), digits = 4)
     type1.period[pp] <- length(which(BCI_period[[pp]][1, ] > Ce1_0)) / dim(BCI_period[[pp]])[2]
   }
+  cli_alert_info("Period Effect: done")
 
   Ce1 <- max(Ce1_0, max(Ce1_p))
   Ce.k.lower <- .find_klower(
@@ -270,9 +274,10 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
   BCI_c_batch <- matrix(NA, nrow = (narm_22 - 1), ncol = sn_s1) # BCI for stage II
   Ye_22 <- sapply(1:sn_s1, function(r) rbinom(rep(1, narm_22), n_22, prob = eff_22[, r]))
 
-  pb <- progress_bar$new(format = "[:bar] :percent", total = sn_s1, width = 50, clear = FALSE)
+
+  cli_progress_bar(total = sn_s1, clear = FALSE)
   for (i in 1:sn_s1) {
-    pb$tick()
+    cli_progress_update()
     dataYe_22 <- list(
       x1 = X1[, i], x2 = X2[, i], period = period,
       Y = c(Ye_22[, i], Ye_21[, i]),
@@ -379,9 +384,9 @@ run.period <- function(fda.case = 1, n.stage1 = 24, n.stage2,
 
   Ye_22 <- sapply(1:sn_s1, function(r) rbinom(rep(1, narm_22), n_22, prob = eff_22[, r]))
 
-  pb <- progress_bar$new(format = "[:bar] :percent", total = sn_s1, width = 50, clear = FALSE)
+  cli_progress_bar(total = sn_s1, clear = FALSE)
   for (i in 1:sn_s1) {
-    pb$tick()
+    cli_progress_update()
     dataYe_22 <- list(
       x1 = X1[, i], x2 = X2[, i], period = period,
       Y = c(Ye_22[, i], Ye_21[, i]),
