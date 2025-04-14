@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# COCA: Combination Dose Optimization and Component Contribution Assessment Design
+# COCA: Combination Dose Optimization and Component Contribution Assessment
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -14,7 +14,7 @@ candidate combination doses. In stage 2, a multi-arm randomized phase is
 initiated to evaluate the contribution of each component within the
 combination therapy.
 
-<img src="./figures/flowchart_v0.png" width="80%">
+<img src="./man/figures/flowchart_v0.png" width="80%">
 
 ## Installation
 
