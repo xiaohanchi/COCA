@@ -24,7 +24,8 @@ download JAGS from <https://sourceforge.net/projects/mcmc-jags/>.
 To install the COCA package from GitHub, run:
 
 ``` r
-remotes::install_github("XXX")
+install.packages("devtools")
+devtools::install_github("xiaohanchi/COCA")
 ```
 
 ## Usage

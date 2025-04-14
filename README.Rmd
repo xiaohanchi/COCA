@@ -27,7 +27,8 @@ JAGS is required for implementing Bayesian MCMC sampling. Please download JAGS f
 
 To install the COCA package from GitHub, run:
 ``` r
-remotes::install_github("XXX")
+install.packages("devtools")
+devtools::install_github("xiaohanchi/COCA")
 ```
 
 ## Usage
