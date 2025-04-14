@@ -20,11 +20,12 @@
 #' @examples
 #'
 #' # To calibrate for a specific sample size candidate, run:
-#' COCA.calibration(case = 1, n.stage2 = 20)
+#' \donttest{COCA.calibration(case = 1, n.stage2 = 20)}
 #'
 #' # For a grid search, try:
-#' n.stage2 <- 10:20
-#' for (i in 1:length(n.stage2)) {
+#' \donttest{
+#' n.stage2 <- 10:11
+#' for (i in seq_along(n.stage2)) {
 #'   if (i == 1) {
 #'     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
 #'   } else {
@@ -32,10 +33,12 @@
 #'     output <- bind_rows(output, output.tmp)
 #'   }
 #' }
-#'
+#'}
 
+#' @import stats
 #' @import cli
 #' @import tibble
+#' @import coda
 #' @import rjags
 #' @import runjags
 #' @export
@@ -73,12 +76,12 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
   cli_alert_info("Alternative Scneario: done")
 
   Ce1_0 <- round(quantile(BCI_null[1, ], (1 - alpha.level)), digits = 4)
-  power <- (length(which(BCI_alt[1, ] > Ce1_0)) / dim(BCI_alt)[2]) %>% round(., 4)
+  power <- round((length(which(BCI_alt[1, ] > Ce1_0)) / dim(BCI_alt)[2]), 4)
 
   cli_alert("Period Effect: in process")
   BCI_period <- list()
   Ce1_p <- type1.period <- c()
-  for (pp in 1:length(period.effect)) {
+  for (pp in seq_along(period.effect)) {
     BCI_period[[pp]] <- run.period(
       fda.case = case, n.stage2 = n.stage2,
       eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
@@ -111,7 +114,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
   summary_tab$Ce1 <- Ce1
   summary_tab$c0 <- Ce.k
   summary_tab$Power <- power
-  summary_tab$TypeI <- (length(which(BCI_null[1, ] > Ce1)) / dim(BCI_null)[2]) %>% round(., 4)
+  summary_tab$TypeI <- round((length(which(BCI_null[1, ] > Ce1)) / dim(BCI_null)[2]), 4)
   summary_tab$TypeI_p <- max(type1.period)
 
   return(summary_tab)
@@ -156,14 +159,14 @@ model{
 .find_klower <- function(fda.case = 1, k.min, BCI, Ce.1, level = 0.05) {
   k0 <- seq(k.min, 1, 0.05)
   if (fda.case == 1) {
-    typei.eff <- sapply(1:length(k0), function(r) {
+    typei.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]) & BCI[3, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- min(k0[which(typei.eff <= level)])
   } else if (fda.case == 2) {
     k <- 1
   } else if (fda.case == 3) {
-    typei.eff <- sapply(1:length(k0), function(r) {
+    typei.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- min(k0[which(typei.eff <= level)])
@@ -178,14 +181,14 @@ model{
 .find_kupper <- function(fda.case = 1, k.min, BCI, Ce.1, level = 0.80) {
   k0 <- seq(k.min, 1, 0.05)
   if (fda.case == 1) {
-    pw.eff <- sapply(1:length(k0), function(r) {
+    pw.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]) & BCI[3, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- max(k0[which(pw.eff >= level)])
   } else if (fda.case == 2) {
     k <- 1
   } else if (fda.case == 3) {
-    pw.eff <- sapply(1:length(k0), function(r) {
+    pw.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- max(k0[which(pw.eff >= level)])
@@ -246,7 +249,7 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
       dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
       dose_std["A", j_ast[r]], dose_std["A", ]
     )
-  }) # dose_level_std["A",3]=0
+  })
   X2_all <- sapply(1:sn_s1, function(r) {
     c(
       dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
@@ -292,7 +295,6 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
     )
 
     codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
-    sumYe_22 <- summary(codasamples.Ye_22)
     piE_mcmc_22 <- matrix(NA, nrow = (jagsmodel.Ye_22$sample * length(jagsmodel.Ye_22$mcmc)), ncol = narm_22)
     for (j in 1:narm_22) {
       piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])
@@ -328,14 +330,14 @@ run.period <- function(fda.case = 1, n.stage1 = 24, n.stage2,
   )
   .logistic_model <- .logistic_model
 
-  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = T)
+  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = TRUE)
   row.names(dosage_level) <- c("A", "B")
   dose_level_std <- t(apply(dosage_level, MARGIN = 1, .dose_standardize))
   dose_std <- matrix(c(
     dose_level_std["A", 1], dose_level_std["B", 1],
     dose_level_std["A", 1], dose_level_std["B", 2],
     dose_level_std["A", 2], dose_level_std["B", 1]
-  ), ncol = ndose, byrow = F)
+  ), ncol = ndose, byrow = FALSE)
   row.names(dose_std) <- c("A", "B")
 
   Econtrol <- eff.ctrl
@@ -356,7 +358,7 @@ run.period <- function(fda.case = 1, n.stage1 = 24, n.stage2,
       dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
       dose_std["A", j_ast[r]], dose_std["A", ]
     )
-  }) # dose_level_std["A",3]=0
+  })
   X2_all <- sapply(1:sn_s1, function(r) {
     c(
       dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
@@ -397,10 +399,9 @@ run.period <- function(fda.case = 1, n.stage1 = 24, n.stage2,
       model = .logistic_model, monitor = jags_params_22, data = dataYe_22,
       n.chains = 4, adapt = 2000, burnin = 5000,
       sample = 5000, summarise = FALSE, thin = 1, method = "rjags",
-      plots = FALSE, silent.jags = T
+      plots = FALSE, silent.jags = TRUE
     )
     codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
-    sumYe_22 <- summary(codasamples.Ye_22)
     piE_mcmc_22 <- matrix(NA, nrow = (jagsmodel.Ye_22$sample * length(jagsmodel.Ye_22$mcmc)), ncol = narm_22)
     for (j in 1:narm_22) {
       piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])

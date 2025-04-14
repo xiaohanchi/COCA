@@ -1,12 +1,18 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# COCA
+# COCA: Combination Dose Optimization and Component Contribution Assessment Design
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of COCA is to …
+This work introduces **COCA**, a two-stage randomized phase II design
+that seamlessly integrates combination dose optimization with component
+contribution assessment. In stage 1, the optimal combination dose is
+determined by maximizing the risk–benefit tradeoff across multiple
+candidate combination doses. In stage 2, a multi-arm randomized phase is
+initiated to evaluate the contribution of each component within the
+combination therapy.
 
 <img src="./figures/flowchart_v0.png" width="80%">
 
@@ -23,7 +29,15 @@ remotes::install_github("XXX")
 
 ## Usage
 
-This is a basic example which shows you how to solve a common problem:
+Get the calibrated design cutoffs and stage 1 sample size:
+
+``` r
+# library(COCA)
+## basic example code
+```
+
+Run simulation to get the operating characteristics of the COCA design
+with the calibrated configurations:
 
 ``` r
 # library(COCA)

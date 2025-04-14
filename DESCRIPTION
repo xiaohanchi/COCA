@@ -1,11 +1,11 @@
 Package: COCA
 Title: Dose Optimization and Component Contribution Assessment for Combination Therapies
-Version: 0.0.0.9000
+Version: 1.0.0
 Authors@R: 
     c(person("Xiaohan", "Chi", , "xchi@mdanderson.org", role = c("aut", "cre")),
     person("Ruitao", "Lin", , "rlin@mdanderson.org", role = c("aut")),
     person("Ying", "Yuan", , "yyuan@mdanderson.org", role = c("aut")))
-Description: R code for implementing the COCA design
+Description: The COCA package is designed to implement the COCA design, a two-stage randomized phase II design that seamlessly integrates combination dose optimization with component contribution assessment.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -14,6 +14,9 @@ Suggests:
     renv
 Imports: 
     cli,
+    coda,
+    isotone,
     rjags,
     runjags,
+    stats,
     tibble

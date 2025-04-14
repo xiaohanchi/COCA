@@ -75,6 +75,7 @@ COCA Simulation
 # \code{n.simu = 20} is used for illustration purposes. For more accurate results,
 # consider using a larger value for \code{n.simu}, such as 5000.
 # Scenario 1 (period effect = 0)
+\donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -82,8 +83,9 @@ COCA.getOC(
   eff.A = 0.25, eff.B = 0.25,
   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
   period.effect = 0, n.simu = 20
-)
+)}
 # Scenario 1 (period effect = 0.2)
+\donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -91,8 +93,9 @@ COCA.getOC(
   eff.A = 0.25, eff.B = 0.25,
   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
   period.effect = 0.2, n.simu = 20
-)
+)}
 # Scenario 2 (period effect = 0)
+\donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -100,8 +103,9 @@ COCA.getOC(
   eff.A = 0.35, eff.B = 0.35,
   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
   period.effect = 0, n.simu = 20
-)
+)}
 # Scenario 2 (period effect = 0.2)
+\donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -109,5 +113,5 @@ COCA.getOC(
   eff.A = 0.35, eff.B = 0.35,
   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
   period.effect = 0.2, n.simu = 20
-)
+)}
 }

@@ -59,11 +59,12 @@ COCA Calibration
 \examples{
 
 # To calibrate for a specific sample size candidate, run:
-COCA.calibration(case = 1, n.stage2 = 20)
+\donttest{COCA.calibration(case = 1, n.stage2 = 20)}
 
 # For a grid search, try:
-n.stage2 <- 10:20
-for (i in 1:length(n.stage2)) {
+\donttest{
+n.stage2 <- 10:11
+for (i in seq_along(n.stage2)) {
   if (i == 1) {
     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
   } else {
@@ -71,5 +72,5 @@ for (i in 1:length(n.stage2)) {
     output <- bind_rows(output, output.tmp)
   }
 }
-
+}
 }

@@ -21,6 +21,8 @@
 #' @return Returns the operating characteristics of stage 1 (selection and expected sample size) and stage 2 (power, GP, SR, OSR, and expected sample size).
 #' @import cli
 #' @import tibble
+#' @import coda
+#' @import isotone
 #' @import rjags
 #' @import runjags
 #' @export
@@ -29,6 +31,7 @@
 #' # \code{n.simu = 20} is used for illustration purposes. For more accurate results,
 #' # consider using a larger value for \code{n.simu}, such as 5000.
 #' # Scenario 1 (period effect = 0)
+#' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
 #'   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -36,8 +39,9 @@
 #'   eff.A = 0.25, eff.B = 0.25,
 #'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
 #'   period.effect = 0, n.simu = 20
-#' )
+#' )}
 #' # Scenario 1 (period effect = 0.2)
+#' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
 #'   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -45,8 +49,9 @@
 #'   eff.A = 0.25, eff.B = 0.25,
 #'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
 #'   period.effect = 0.2, n.simu = 20
-#' )
+#' )}
 #' # Scenario 2 (period effect = 0)
+#' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
 #'   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -54,8 +59,9 @@
 #'   eff.A = 0.35, eff.B = 0.35,
 #'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
 #'   period.effect = 0, n.simu = 20
-#' )
+#' )}
 #' # Scenario 2 (period effect = 0.2)
+#' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
 #'   tox.SOC = 0.10, eff.SOC = 0.25,
@@ -63,8 +69,7 @@
 #'   eff.A = 0.35, eff.B = 0.35,
 #'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
 #'   period.effect = 0.2, n.simu = 20
-#' )
-
+#' )}
 COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
                        tox.SOC = 0.10, eff.SOC = 0.25,
                        tox.A = 0.25, tox.B = 0.15,
@@ -82,8 +87,8 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   n.dose.AB <- 3
   Nmax_p2 <- c(n.stage1, n.stage2) # stage 1 & stage 2
   T_21 <- 2
-  A1 <- matrix(c(2, 1, 3, 1), byrow = T, nrow = 2) # order matrix for pi_tox_hat
-  A2 <- matrix(c(1, 2, 1, 3), byrow = T, nrow = 2) # order matrix for prob
+  A1 <- matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2) # order matrix for pi_tox_hat
+  A2 <- matrix(c(1, 2, 1, 3), byrow = TRUE, nrow = 2) # order matrix for prob
   T_22 <- 2
   C_s1 <- C_s2 <- Cs
   C_t <- 0.10
@@ -103,14 +108,14 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     c(0, 0, 0, 0, 1, 1, 1)[-3]
   )
 
-  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = T)
+  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = TRUE)
   row.names(dosage_level) <- c("A", "B")
   dose_level_std <- t(apply(dosage_level, MARGIN = 1, .dose_standardize))
   dose_std <- matrix(c(
     dose_level_std["A", 1], dose_level_std["B", 1],
     dose_level_std["A", 1], dose_level_std["B", 2],
     dose_level_std["A", 2], dose_level_std["B", 1]
-  ), ncol = n.dose.AB, byrow = F)
+  ), ncol = n.dose.AB, byrow = FALSE)
   row.names(dose_std) <- c("A", "B")
 
   ### simulation settings
@@ -198,7 +203,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   ### Stage II (Proof of Concept)
   Eff_prob <- Eff_prob - period.effect
 
-  BCI <- matrix(rep(BCI, (narm_22 - 1)), nrow = (narm_22 - 1), byrow = T)
+  BCI <- matrix(rep(BCI, (narm_22 - 1)), nrow = (narm_22 - 1), byrow = TRUE)
   Yt_21 <- (Y_21[, 1, ] + Y_21[, 3, ])[, which(j_ast1 > 0)]
   Ye_21 <- (Y_21[, 3, ] + Y_21[, 4, ])[, which(j_ast1 > 0)]
   sn_22 <- sum(j_ast1 > 0)
@@ -223,7 +228,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
       dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
       dose_std["A", j_ast1_tmp[r]], dose_std["A", ]
     )
-  }) # dose_level_std["A",3]=0
+  })
   X2_all <- sapply(1:sn_22, function(r) {
     c(
       dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
@@ -272,7 +277,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
             model = logistic_model, monitor = jags_params_22, data = dataYe_22,
             n.chains = 4, adapt = 2000, burnin = 3000,
             sample = 5000, summarise = FALSE, thin = 1, method = "rjags",
-            plots = FALSE, silent.jags = T
+            plots = FALSE, silent.jags = TRUE
           )
           codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
           piE_mcmc_22 <- matrix(NA, nrow = (jagsmodel.Ye_22$sample * length(jagsmodel.Ye_22$mcmc)), ncol = narm_22)
@@ -315,7 +320,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
             model = logistic_model, monitor = jags_params_22, data = dataYe_22,
             n.chains = 4, adapt = 2000, burnin = 3000,
             sample = 5000, summarise = FALSE, thin = 1, method = "rjags",
-            plots = FALSE, silent.jags = T
+            plots = FALSE, silent.jags = TRUE
           )
           codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
           sumYe_22 <- summary(codasamples.Ye_22)
