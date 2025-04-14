@@ -4,26 +4,23 @@
 # COCA
 
 <!-- badges: start -->
-
-[![License:
-MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![R
-Version](https://img.shields.io/badge/R-%3E=4.2-blue)](https://cran.r-project.org/)
-[![JAGS
-Required](https://img.shields.io/badge/JAGS-Required-red)](http://mcmc-jags.sourceforge.net/)
 <!-- badges: end -->
 
-The goal of COCA is to …
+The goal of COCA is to … ![COCA
+Overview](./figures/flowchart_v0.png?raw=True)
 
 ## Installation
 
-Install from GitHub:
+JAGS is required for implementing Bayesian MCMC sampling. Please
+download JAGS from <https://sourceforge.net/projects/mcmc-jags/>.
+
+To install the COCA package from GitHub, run:
 
 ``` r
 remotes::install_github("XXX")
 ```
 
-## Example
+## Usage
 
 This is a basic example which shows you how to solve a common problem:
 
@@ -31,3 +28,10 @@ This is a basic example which shows you how to solve a common problem:
 # library(COCA)
 ## basic example code
 ```
+
+## Authors and Reference
+
+Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+). COCA: A
+Randomized Bayesian Design Integrating Dose Optimization and Component
+Contribution Assessment for Combination Therapies. Under Minor Revision
+in *Biometrics*.
