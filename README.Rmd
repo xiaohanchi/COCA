@@ -16,16 +16,19 @@ knitr::opts_chunk$set(
 # COCA: Combination Dose Optimization and Component Contribution Assessment
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-This work introduces **COCA**, a two-stage randomized phase II design that seamlessly integrates combination dose optimization with component contribution assessment. In stage 1, the optimal combination dose is determined by maximizing the risk–benefit tradeoff across multiple candidate combination doses. In stage 2, a multi-arm randomized phase is initiated to evaluate the contribution of each component within the combination therapy. 
+This work introduces **COCA**, a two-stage randomized phase II design that seamlessly integrates combination dose optimization with component contribution assessment. In stage 1, the optimal combination dose is determined by maximizing the risk–benefit tradeoff across multiple candidate combination doses. In stage 2, a multi-arm randomized phase is initiated to evaluate the contribution of each component within the combination therapy.
 
-<img src="./man/figures/flowchart_v0.png" width="80%">
+<img src="./man/figures/flowchart_v0.png" width="80%"/>
 
 ## Installation
-JAGS is required for implementing Bayesian MCMC sampling. Please download JAGS from https://sourceforge.net/projects/mcmc-jags/. 
+
+JAGS is required for implementing Bayesian MCMC sampling. Please download JAGS from <https://sourceforge.net/projects/mcmc-jags/>.
 
 To install the COCA package from GitHub, run:
+
 ``` r
 install.packages("devtools")
 devtools::install_github("xiaohanchi/COCA")
@@ -33,20 +36,36 @@ devtools::install_github("xiaohanchi/COCA")
 
 ## Usage
 
-Get the calibrated design cutoffs and stage 1 sample size:
+Load COCA package:
 
-```{r example1}
-# library(COCA)
-## basic example code
+```{r load, eval = FALSE}
+library(COCA)
 ```
 
-Run simulation to get the operating characteristics of the COCA design with the calibrated configurations:
+For a specific stage 2 sample size (e.g., 20), get the calibrated design cutoffs and power:
 
-```{r example2}
-# library(COCA)
-## basic example code
+```{r example1, eval = FALSE}
+COCA.calibration(case = 1, n.stage2 = 20, n.simu = 100)
 ```
+
+-   `n.simu` is set to 100 for illustration. For more accurate calibration, consider using a larger value, such as 10000, though this may require additional computation time.
+-   If the power does not reach the target, increase `n.stage2` and repeat the process.
+
+Once the optimal `n.stage2` is found, run simulations to get the operating characteristics of the COCA design with the calibrated configurations:
+
+```{r example2, eval = FALSE}
+# E.g., scenario 1 (period effect = 0)
+COCA.getOC(
+  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  tox.SOC = 0.10, eff.SOC = 0.25,
+  tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.25, eff.B = 0.25,
+  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
+  period.effect = 0, n.simu = 100
+)
+```
+-   Again, `n.simu` is set to 100 for illustration. For more accurate simulation, consider using a larger value, such as 10000.
 
 ## Authors and Reference
-Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+). COCA: A Randomized Bayesian Design Integrating Dose Optimization and Component Contribution Assessment for Combination Therapies. Under Minor Revision in _Biometrics_.
 
+Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+). COCA: A Randomized Bayesian Design Integrating Dose Optimization and Component Contribution Assessment for Combination Therapies. Under Minor Revision in *Biometrics*.

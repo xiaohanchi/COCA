@@ -63,7 +63,7 @@ COCA Calibration
 
 # For a grid search, try:
 \donttest{
-n.stage2 <- 10:11
+n.stage2 <- 10:20
 for (i in seq_along(n.stage2)) {
   if (i == 1) {
     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])

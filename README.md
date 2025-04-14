@@ -14,7 +14,7 @@ candidate combination doses. In stage 2, a multi-arm randomized phase is
 initiated to evaluate the contribution of each component within the
 combination therapy.
 
-<img src="./man/figures/flowchart_v0.png" width="80%">
+<img src="./man/figures/flowchart_v0.png" width="80%"/>
 
 ## Installation
 
@@ -30,20 +30,43 @@ devtools::install_github("xiaohanchi/COCA")
 
 ## Usage
 
-Get the calibrated design cutoffs and stage 1 sample size:
+Load COCA package:
 
 ``` r
-# library(COCA)
-## basic example code
+library(COCA)
 ```
 
-Run simulation to get the operating characteristics of the COCA design
-with the calibrated configurations:
+For a specific stage 2 sample size (e.g., 20), get the calibrated design
+cutoffs and power:
 
 ``` r
-# library(COCA)
-## basic example code
+COCA.calibration(case = 1, n.stage2 = 20, n.simu = 100)
 ```
+
+- `n.simu` is set to 100 for illustration. For more accurate
+  calibration, consider using a larger value, such as 10000, though this
+  may require additional computation time.
+- If the power does not reach the target, increase `n.stage2` and repeat
+  the process.
+
+Once the optimal `n.stage2` is found, run simulations to get the
+operating characteristics of the COCA design with the calibrated
+configurations:
+
+``` r
+# E.g., scenario 1 (period effect = 0)
+COCA.getOC(
+  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  tox.SOC = 0.10, eff.SOC = 0.25,
+  tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.25, eff.B = 0.25,
+  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
+  period.effect = 0, n.simu = 100
+)
+```
+
+- Again, `n.simu` is set to 100 for illustration. For more accurate
+  simulation, consider using a larger value, such as 10000.
 
 ## Authors and Reference
 

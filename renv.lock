@@ -513,6 +513,34 @@
       "Maintainer": "Carson Sievert <carson@posit.co>",
       "Repository": "CRAN"
     },
+    "isotone": {
+      "Package": "isotone",
+      "Version": "1.1-1",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "Active Set and Generalized PAVA for Isotone Optimization",
+      "Date": "2023-02-21",
+      "Authors@R": "c(person(\"Patrick\", \"Mair\", role = c(\"aut\", \"cre\"), email = \"mair@fas.harvard.edu\"), person(\"Jan\", \"De Leeuw\", role = \"aut\"), person(\"Kurt\", \"Hornik\", role = \"aut\"))",
+      "Author": "Patrick Mair [aut, cre], Jan De Leeuw [aut], Kurt Hornik [aut]",
+      "Maintainer": "Patrick Mair <mair@fas.harvard.edu>",
+      "Description": "Contains two main functions: one for solving general isotone regression problems using the pool-adjacent-violators algorithm (PAVA); another one provides a framework for active set methods for isotone optimization problems with arbitrary order restrictions. Various types of loss functions are prespecified.",
+      "Imports": [
+        "graphics",
+        "stats",
+        "nnls"
+      ],
+      "Depends": [
+        "R (>= 3.0.2)"
+      ],
+      "License": "GPL-2",
+      "URL": "https://r-forge.r-project.org/projects/psychor/",
+      "LazyData": "yes",
+      "LazyLoad": "yes",
+      "ByteCompile": "yes",
+      "NeedsCompilation": "yes",
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
+    },
     "jquerylib": {
       "Package": "jquerylib",
       "Version": "0.1.4",
@@ -790,6 +818,25 @@
       "Author": "Yihui Xie [aut, cre] (<https://orcid.org/0000-0003-0645-5666>, https://yihui.org), Jeffrey Horner [ctb], Beilei Bian [ctb]",
       "Maintainer": "Yihui Xie <xie@yihui.name>",
       "Repository": "CRAN"
+    },
+    "nnls": {
+      "Package": "nnls",
+      "Version": "1.6",
+      "Source": "Repository",
+      "Type": "Package",
+      "Title": "The Lawson-Hanson Algorithm for Non-Negative Least Squares (NNLS)",
+      "Authors@R": "c(person(given = c(\"Katharine\", \"M.\"), family = \"Mullen\", role = \"aut\"), person(given = c(\"Ivo\", \"H.\", \"M.\"), family = \"van Stokkum\", role = \"aut\"), person(given = \"Katharine\", family = \"Mullen\", role = \"cre\", email = \"mullenkate@gmail.com\"))",
+      "Maintainer": "Katharine Mullen <mullenkate@gmail.com>",
+      "Suggests": [
+        "bvls",
+        "quadprog"
+      ],
+      "Description": "An R interface to the Lawson-Hanson implementation of an algorithm for non-negative least squares (NNLS).  Also allows the combination of non-negative and non-positive constraints.",
+      "License": "GPL (>= 2)",
+      "NeedsCompilation": "yes",
+      "Author": "Katharine M. Mullen [aut], Ivo H. M. van Stokkum [aut], Katharine Mullen [cre]",
+      "Repository": "CRAN",
+      "Encoding": "UTF-8"
     },
     "pillar": {
       "Package": "pillar",
