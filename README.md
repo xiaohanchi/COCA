@@ -6,8 +6,9 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of COCA is to … ![COCA
-Overview](./figures/flowchart_v0.png?raw=True)
+The goal of COCA is to …
+
+<img src="./figures/flowchart_v0.png" width="80%">
 
 ## Installation
 
