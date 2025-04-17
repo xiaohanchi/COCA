@@ -6,6 +6,7 @@
 \usage{
 COCA.calibration(
   case,
+  n.stage1 = 24,
   n.stage2,
   eff.null = 0.25,
   eff.alt.SOC = 0.25,
@@ -23,6 +24,8 @@ COCA.calibration(
 }
 \arguments{
 \item{case}{Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.}
+
+\item{n.stage1}{Sample size for stage 1}
 
 \item{n.stage2}{Sample size for stage 2}
 

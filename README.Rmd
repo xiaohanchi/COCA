@@ -45,7 +45,13 @@ library(COCA)
 For a specific stage 2 sample size (e.g., 20), get the calibrated design cutoffs and power:
 
 ```{r example1, eval = FALSE}
-COCA.calibration(case = 1, n.stage2 = 20, n.simu = 100)
+COCA.calibration(
+  case = 1, n.stage2 = 20, eff.null = 0.25,
+  eff.alt.SOC = 0.25, eff.alt.A = 0.35, eff.alt.B = 0.35, eff.alt.AB = 0.55,
+  period.effect = c(0.1, 0.2, 0.3),
+  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80, 
+  n.simu = 100
+)
 ```
 
 -   `n.simu` is set to 100 for illustration. For more accurate calibration, consider using a larger value, such as 10000, though this may require additional computation time.

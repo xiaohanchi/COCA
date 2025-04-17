@@ -1,5 +1,5 @@
 Package: COCA
-Title: Dose Optimization and Component Contribution Assessment for Combination Therapies
+Title: Combination Dose Optimization and Component Contribution Assessment
 Version: 1.0.0
 Authors@R: 
     c(person("Xiaohan", "Chi", , "xchi@mdanderson.org", role = c("aut", "cre")),

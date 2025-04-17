@@ -1,6 +1,7 @@
 #' COCA Calibration
 #'
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
+#' @param n.stage1 Sample size for stage 1
 #' @param n.stage2 Sample size for stage 2
 #' @param eff.null Unpromising efficacy rate (\eqn{\widetilde{q}_1}) in the global null hypothesis
 #' @param eff.alt.SOC Efficacy rate of the SOC arm (\eqn{\widetilde{q}_{SOC}}) in the alternative hypothesis
@@ -43,7 +44,8 @@
 #' @import runjags
 #' @export
 #'
-COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
+COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
+                             eff.null = 0.25,
                              eff.alt.SOC = 0.25, eff.alt.A = 0.35,
                              eff.alt.B = 0.35, eff.alt.AB = 0.55,
                              period.effect = c(0.1, 0.2, 0.3),
@@ -61,7 +63,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
 
   cli_alert("Null Scneario: in process")
   BCI_null <- run.whole(
-    fda.case = case, n.stage2 = n.stage2,
+    fda.case = case, n.stage1 = n.stage1, n.stage2 = n.stage2,
     eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
     batch.idx = seed, batch.sn = n.simu
   )
@@ -69,7 +71,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
 
   cli_alert("Alternative Scneario: in process")
   BCI_alt <- run.whole(
-    fda.case = case, n.stage2 = n.stage2,
+    fda.case = case, n.stage1 = n.stage1, n.stage2 = n.stage2,
     eff.ctrl = eff.alt.SOC, eff.A = eff.alt.A, eff.B = eff.alt.B, eff.AB = eff.alt.AB,
     batch.idx = seed, batch.sn = n.simu
   )
@@ -83,7 +85,7 @@ COCA.calibration <- function(case, n.stage2, eff.null = 0.25,
   Ce1_p <- type1.period <- c()
   for (pp in seq_along(period.effect)) {
     BCI_period[[pp]] <- run.period(
-      fda.case = case, n.stage2 = n.stage2,
+      fda.case = case, n.stage1 = n.stage1, n.stage2 = n.stage2,
       eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
       period_eff = period.effect[pp],
       batch.idx = seed, batch.sn = n.simu
