@@ -62,12 +62,10 @@ configurations:
 ``` r
 # E.g., scenario 1 (period effect = 0)
 COCA.getOC(
-  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  tox.SOC = 0.10, eff.SOC = 0.25,
-  tox.A = 0.25, tox.B = 0.15,
-  eff.A = 0.25, eff.B = 0.25,
-  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
-  period.effect = 0, n.simu = 100
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7, 
+  tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15, 
+  eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15), 
+  eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25), n.simu = 100
 )
 ```
 

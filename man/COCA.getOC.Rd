@@ -79,7 +79,7 @@ COCA Simulation
 # Scenario 1 (period effect = 0)
 \donttest{
 COCA.getOC(
-  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
@@ -88,7 +88,7 @@ COCA.getOC(
 # Scenario 1 (period effect = 0.2)
 \donttest{
 COCA.getOC(
-  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
@@ -97,7 +97,7 @@ COCA.getOC(
 # Scenario 2 (period effect = 0)
 \donttest{
 COCA.getOC(
-  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25,  = 0.25, tox.B = 0.15,
   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
@@ -106,7 +106,7 @@ COCA.getOC(
 # Scenario 2 (period effect = 0.2)
 \donttest{
 COCA.getOC(
-  n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
