@@ -45,11 +45,11 @@
 #'}
 
 #' @import stats
+#' @import pbapply
 #' @import cli
 #' @import tibble
 #' @import coda
-#' @import rjags
-#' @import runjags
+
 #' @export
 #'
 COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
@@ -62,7 +62,6 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
                              seed = 123, n.simu = 20) {
 
   # Check input
-
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
   if (!is.numeric(n.stage1) || length(n.stage1) != 1 || n.stage1 <= 0 || n.stage1 != as.integer(n.stage1)) {
     stop("'n.stage1' must be a positive integer.")
@@ -99,11 +98,6 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
   if (alpha.max < alpha.level)  stop(sprintf("'alpha.max' must be greater than or equal to 'alpha.level'."))
 
   # Main function
-
-  runjags.options(
-    inits.warning = FALSE, rng.warning = FALSE, silent.jags = TRUE, silent.runjags = TRUE
-  )
-
   summary_tab <- tibble(
     case = case, n.stage2 = n.stage2,
     Ce1 = NA, c0 = NA, Power = NA, TypeI = NA, TypeI_p = NA
@@ -186,24 +180,43 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
   return(res)
 }
 
+#' @keywords internal
+.get_Beta_prior <- function(n.sample = 1e6, type = 2) {
+  set.seed(0)
+  # type = 1 for vague prior on beta3; type = 2 for spike and slab prior
+  beta0 <- rnorm(n.sample, 0, sqrt(10))
+  beta1 <- rnorm(n.sample, 0, sqrt(10))
+  beta2 <- rnorm(n.sample, 0, sqrt(10))
+  if (type == 1){
+    beta3 <- rnorm(n.sample, 0, sqrt(10))
+  } else if (type == 2){
+    beta3.dist1 <- rnorm(n.sample, 0, sqrt(10))
+    beta3.dist0 <- rnorm(n.sample, 0, 0.01)
+    beta3.wt <- rbinom(n.sample, size = 1, prob = 0.5)
+    beta3 <- beta3.wt * beta3.dist1 + (1 - beta3.wt) * beta3.dist0
+  }
+
+  dist1 <- rnorm(n.sample, 0, sqrt(10))
+  dist0 <- rnorm(n.sample, 0, 0.01)
+  wt <- rbinom(n.sample, size = 1, prob = 0.5)
+  beta4 <- wt * dist1 + (1 - wt) * dist0
+  Beta_prior <- rbind(beta0, beta1, beta2, beta3, beta4)
+  return(Beta_prior)
+}
 
 #' @keywords internal
-.logistic_model <- "
-model{
-  for(k in 1:N_arms){
-    Y[k]~dbin(pi[k],n[k])
-    logit(pi[k])<-beta0+beta1*x1[k]+beta2*x2[k]+beta3*x1[k]*x2[k]+beta4*x1[k]*x2[k]*period[k]
-  }
-  beta0 ~ dnorm(0,0.1)
-  beta1 ~ dnorm(0,0.1)
-  beta2 ~ dnorm(0,0.1)
-  beta3 ~ dnorm(0,0.1)
-  beta4 <- wt * dist1 + (1 - wt) * dist0
-  dist1 ~ dnorm(0,0.1)
-  dist0 ~ dnorm(0,1e4)
-  wt ~ dbern(0.5)
+.get_post <- function(Beta_prior, X.mtx, pE_prior,
+                     logpE_prior0, logpE_prior1, data_Y, data_N) {
+
+  log_likelihood <- (data_Y %*% logpE_prior0) + ((data_N - data_Y) %*% logpE_prior1)
+  likelihood <- exp(log_likelihood)
+  weights <- likelihood / sum(likelihood)
+  idx <- sample(1:ncol(Beta_prior), size = ncol(Beta_prior), replace = TRUE, prob = weights)
+  pE_post <- expit(MtxProd(X.mtx, Beta_prior[, idx]))
+  return(pE_post)
 }
-"
+
+
 
 #' @keywords internal
 .find_klower <- function(fda.case = 1, k.min, BCI, Ce.1, level = 0.05) {
@@ -266,7 +279,6 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
     2,
     3
   )
-  jags_params_22 <- c("pi")
   period <- switch(fda_sc,
     c(0, 0, 0, 0, 1, 1, 1),
     c(0, 0, 0, 0, 1, 1, 1)[c(1, 4, 5, 6, 7)],
@@ -288,8 +300,8 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
   singleA <- eff.A
   singleB <- eff.B
   comb <- eff.AB
-
   comb_s1 <- comb + period_eff
+
   #### Stage I
   Ye_21 <- sapply(1:sn_s1, function(r) rbinom(rep(1, ndose), n_21, prob = comb_s1))
   q_hat <- (Ye_21 + 0.1) / (n_21 + 0.2)
@@ -297,18 +309,19 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
   j_ast <- sapply(1:sn_s1, function(r) .find_order_stat(order = 1, q = q_hat[, r]))
 
 
-  X1_all <- sapply(1:sn_s1, function(r) {
+  X1_all <- sapply(1:ndose, function(r) {
     c(
       dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
-      dose_std["A", j_ast[r]], dose_std["A", ]
+      dose_std["A", r], dose_std["A", ]
     )
   })
-  X2_all <- sapply(1:sn_s1, function(r) {
+  X2_all <- sapply(1:ndose, function(r) {
     c(
       dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
-      dose_std["B", j_ast[r]], dose_std["B", ]
+      dose_std["B", r], dose_std["B", ]
     )
   })
+  colnames(X1_all) <- colnames(X2_all) <- c("j=1", "j=2", "j=3")
   X1 <- switch(fda_sc,
     X1_all,
     X1_all[c(1, 4, 5, 6, 7), ],
@@ -327,31 +340,39 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
     eff_22_all[-3, ]
   )
   BCI_c_batch <- matrix(NA, nrow = (narm_22 - 1), ncol = sn_s1) # BCI for stage II
-
   Ye_22 <- sapply(1:sn_s1, function(r) rbinom(rep(1, narm_22), n_22, prob = eff_22[, r]))
 
-  cli_progress_bar(total = sn_s1, clear = FALSE)
-  for (i in 1:sn_s1) {
-    cli_progress_update()
-    dataYe_22 <- list(
-      x1 = X1[, i], x2 = X2[, i], period = period,
-      Y = c(Ye_22[, i], Ye_21[, i]),
-      N_arms = (narm_22 + ndose),
-      n = c(rep(n_22, narm_22), rep(n_21, ndose))
-    )
-    jagsmodel.Ye_22 <- run.jags(
-      model = .logistic_model, monitor = jags_params_22, data = dataYe_22,
-      n.chains = 4, adapt = 2000, burnin = 5000,
-      sample = 5000, summarise = FALSE, thin = 1, method = "rjags",
-      plots = FALSE, silent.jags = TRUE
-    )
-    codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
-    piE_mcmc_22 <- matrix(NA, nrow = (jagsmodel.Ye_22$sample * length(jagsmodel.Ye_22$mcmc)), ncol = narm_22)
-    for (j in 1:narm_22) {
-      piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])
-    }
+  X.mtx.all <- lapply(1:ndose, function(r) {
+    cbind(1, X1[, r], X2[, r], (X1[, r] * X2[, r]), (X1[, r] * X2[, r] * period))
+  })
+  Beta_prior <- .get_Beta_prior(n.sample = 1e6, type = 2)
+  pE_prior_list <- lapply(1:ndose, function(r) {
+    expit(MtxProd(X.mtx.all[[r]], Beta_prior))
+  })
+  logpE_prior0_list <- lapply(1:ndose, function(r)
+    log(pE_prior_list[[r]])
+  )
+  logpE_prior1_list <- lapply(1:ndose, function(r)
+    log(1 - pE_prior_list[[r]])
+  )
+  data_Y <- t(rbind(Ye_22, Ye_21))
+  data_N <- c(rep(n_22, narm_22), rep(n_21, ndose))
 
-    BCI_c_batch[, i] <- sapply(1:(narm_22 - 1), function(r) mean(piE_mcmc_22[, narm_22] > piE_mcmc_22[, r]))
-  }
+  BCI_c_batch <- pbsapply(1:sn_s1, function(i) {
+    pE_prior <- pE_prior_list[[j_ast[i]]]
+    logpE_prior0 <- logpE_prior0_list[[j_ast[i]]]
+    logpE_prior1 <- logpE_prior1_list[[j_ast[i]]]
+
+    X.mtx <- X.mtx.all[[j_ast[i]]]
+
+    pE_post <- .get_post(
+      Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
+      logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
+      data_Y = data_Y[i, ], data_N = data_N
+    )
+
+    output <- sapply(1:(narm_22 - 1), function(r) mean(pE_post[narm_22, ] > pE_post[r, ]) )
+    return(output)
+  })
   return(BCI_c_batch)
 }

@@ -16,7 +16,13 @@ Imports:
     cli,
     coda,
     isotone,
+    pbapply,
+    Rcpp,
     rjags,
     runjags,
     stats,
     tibble
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo,
+    RcppEigen
