@@ -52,6 +52,51 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
                              alpha.level = 0.10, alpha.max = 0.20,
                              fsr.level = 0.05, tsr.level = 0.80,
                              seed = 123, n.simu = 20) {
+
+  # ------------------------------- #
+  # Check input
+  # ------------------------------- #
+
+  if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
+  if (!is.integer(n.stage1) || length(n.stage1) != 1 || n.stage1 <= 0 ) {
+    stop("'n.stage1' must be a positive integer.")
+  }
+  if (!is.integer(n.stage2) || length(n.stage2) != 1 || n.stage2 <= 0 ) {
+    stop("'n.stage2' must be a positive integer.")
+  }
+
+  for (param_name in c("eff.null", "eff.alt.SOC", "eff.alt.A", "eff.alt.B", "eff.alt.AB")) {
+    param_value <- get(param_name)
+    if (!is.numeric(param_value) || param_value < 0 || param_value > 1) {
+      stop(sprintf("'%s' must be between 0 and 1.", param_name))
+    }
+  }
+
+  if (eff.alt.SOC > eff.alt.A || eff.alt.SOC > eff.alt.B) {
+    stop(sprintf("'eff.alt.SOC' should not exceed 'eff.alt.A' or 'eff.alt.B'."))
+  }
+  if (eff.alt.A > eff.alt.AB || eff.alt.B > eff.alt.AB) {
+    stop(sprintf("'eff.alt.A' or 'eff.alt.B' should not exceed 'eff.alt.AB'."))
+  }
+
+  if (!is.numeric(period.effect) || any(period.effect < 0)) stop("'period.effect' must be a numeric vector with non-negative values.")
+  if (any(eff.null + period.effect > 1)) {
+    stop(sprintf("Each 'eff.null + period.effect' must be <= 1. Found max = %s", max(eff.null + period.effect)))
+  }
+
+  for (param_name in c("alpha.level", "alpha.max", "fsr.level", "tsr.level")) {
+    param_value <- get(param_name)
+    if (!is.numeric(param_value) || param_value < 0 || param_value > 1) {
+      stop(sprintf("'%s' must be between 0 and 1.", param_name))
+    }
+  }
+  if (alpha.max < alpha.level)  stop(sprintf("'alpha.max' must be greater than or equal to 'alpha.level'."))
+
+
+  # ------------------------------- #
+  # Main function
+  # ------------------------------- #
+
   runjags.options(
     inits.warning = FALSE, rng.warning = FALSE, silent.jags = TRUE, silent.runjags = TRUE
   )
