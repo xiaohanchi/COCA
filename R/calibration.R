@@ -284,7 +284,6 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
     c(0, 0, 0, 0, 1, 1, 1)[c(1, 4, 5, 6, 7)],
     c(0, 0, 0, 0, 1, 1, 1)[-3]
   )
-  .logistic_model <- .logistic_model
 
   dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = TRUE)
   row.names(dosage_level) <- c("A", "B")
