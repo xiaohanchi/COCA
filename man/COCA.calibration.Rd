@@ -62,7 +62,15 @@ COCA Calibration
 \examples{
 
 # To calibrate for a specific sample size candidate, run:
-\donttest{COCA.calibration(case = 1, n.stage2 = 20)}
+\donttest{
+COCA.calibration(
+  case = 1, n.stage1 = 24, n.stage2 = 20, eff.null = 0.25,
+  eff.alt.SOC = 0.25, eff.alt.A = 0.35, eff.alt.B = 0.35, eff.alt.AB = 0.55,
+  period.effect = c(0.1, 0.2, 0.3),
+  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+  n.simu = 100
+)
+}
 
 # For a grid search, try:
 \donttest{

@@ -21,7 +21,15 @@
 #' @examples
 #'
 #' # To calibrate for a specific sample size candidate, run:
-#' \donttest{COCA.calibration(case = 1, n.stage2 = 20)}
+#' \donttest{
+#' COCA.calibration(
+#'   case = 1, n.stage1 = 24, n.stage2 = 20, eff.null = 0.25,
+#'   eff.alt.SOC = 0.25, eff.alt.A = 0.35, eff.alt.B = 0.35, eff.alt.AB = 0.55,
+#'   period.effect = c(0.1, 0.2, 0.3),
+#'   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+#'   n.simu = 100
+#' )
+#' }
 #'
 #' # For a grid search, try:
 #' \donttest{
@@ -53,15 +61,13 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
                              fsr.level = 0.05, tsr.level = 0.80,
                              seed = 123, n.simu = 20) {
 
-  # ------------------------------- #
   # Check input
-  # ------------------------------- #
 
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
-  if (!is.integer(n.stage1) || length(n.stage1) != 1 || n.stage1 <= 0 ) {
+  if (!is.numeric(n.stage1) || length(n.stage1) != 1 || n.stage1 <= 0 || n.stage1 != as.integer(n.stage1)) {
     stop("'n.stage1' must be a positive integer.")
   }
-  if (!is.integer(n.stage2) || length(n.stage2) != 1 || n.stage2 <= 0 ) {
+  if (!is.numeric(n.stage2) || length(n.stage2) != 1 || n.stage2 <= 0 || n.stage2 != as.integer(n.stage2)) {
     stop("'n.stage2' must be a positive integer.")
   }
 
@@ -92,10 +98,7 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
   }
   if (alpha.max < alpha.level)  stop(sprintf("'alpha.max' must be greater than or equal to 'alpha.level'."))
 
-
-  # ------------------------------- #
   # Main function
-  # ------------------------------- #
 
   runjags.options(
     inits.warning = FALSE, rng.warning = FALSE, silent.jags = TRUE, silent.runjags = TRUE
@@ -129,7 +132,7 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
   BCI_period <- list()
   Ce1_p <- type1.period <- c()
   for (pp in seq_along(period.effect)) {
-    BCI_period[[pp]] <- run.period(
+    BCI_period[[pp]] <- run.whole(
       fda.case = case, n.stage1 = n.stage1, n.stage2 = n.stage2,
       eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
       period_eff = period.effect[pp],
@@ -248,112 +251,6 @@ model{
 
 #' @keywords internal
 run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
-                      eff.ctrl, eff.A, eff.B, eff.AB, batch.idx, batch.sn = 100) {
-  set.seed(1233 + 10 * batch.idx)
-
-  sn_s1 <- batch.sn
-  fda_sc <- fda.case
-  ndose <- 3
-  n_21 <- n.stage1
-  n_22 <- n.stage2
-
-  narm_22 <- switch(fda_sc,
-    4,
-    2,
-    3
-  )
-  jags_params_22 <- c("pi")
-  period <- switch(fda_sc,
-    c(0, 0, 0, 0, 1, 1, 1),
-    c(0, 0, 0, 0, 1, 1, 1)[c(1, 4, 5, 6, 7)],
-    c(0, 0, 0, 0, 1, 1, 1)[-3]
-  )
-  .logistic_model <- .logistic_model
-
-  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = T)
-  row.names(dosage_level) <- c("A", "B")
-  dose_level_std <- t(apply(dosage_level, MARGIN = 1, .dose_standardize))
-  dose_std <- matrix(c(
-    dose_level_std["A", 1], dose_level_std["B", 1],
-    dose_level_std["A", 1], dose_level_std["B", 2],
-    dose_level_std["A", 2], dose_level_std["B", 1]
-  ), ncol = ndose, byrow = F)
-  row.names(dose_std) <- c("A", "B")
-
-  Econtrol <- eff.ctrl
-  singleA <- eff.A
-  singleB <- eff.B
-  comb <- eff.AB
-
-  ### stage I
-  Ye_21 <- sapply(1:sn_s1, function(r) rbinom(rep(1, ndose), n_21, prob = comb))
-  q_hat <- (Ye_21 + 0.1) / (n_21 + 0.2)
-
-  j_ast <- sapply(1:sn_s1, function(r) .find_order_stat(order = 1, q = q_hat[, r]))
-
-  X1_all <- sapply(1:sn_s1, function(r) {
-    c(
-      dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
-      dose_std["A", j_ast[r]], dose_std["A", ]
-    )
-  })
-  X2_all <- sapply(1:sn_s1, function(r) {
-    c(
-      dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
-      dose_std["B", j_ast[r]], dose_std["B", ]
-    )
-  })
-  X1 <- switch(fda_sc,
-    X1_all,
-    X1_all[c(1, 4, 5, 6, 7), ],
-    X1_all[-3, ]
-  )
-  X2 <- switch(fda_sc,
-    X2_all,
-    X2_all[c(1, 4, 5, 6, 7), ],
-    X2_all[-3, ]
-  )
-
-  #### Stage II
-  eff_22_all <- rbind(rep(Econtrol, sn_s1), rep(singleA, sn_s1), rep(singleB, sn_s1), rep(comb, sn_s1))
-  eff_22 <- switch(fda_sc,
-    eff_22_all,
-    eff_22_all[c(1, 4), ],
-    eff_22_all[-3, ]
-  )
-  BCI_c_batch <- matrix(NA, nrow = (narm_22 - 1), ncol = sn_s1) # BCI for stage II
-  Ye_22 <- sapply(1:sn_s1, function(r) rbinom(rep(1, narm_22), n_22, prob = eff_22[, r]))
-
-
-  cli_progress_bar(total = sn_s1, clear = FALSE)
-  for (i in 1:sn_s1) {
-    cli_progress_update()
-    dataYe_22 <- list(
-      x1 = X1[, i], x2 = X2[, i], period = period,
-      Y = c(Ye_22[, i], Ye_21[, i]),
-      N_arms = (narm_22 + ndose),
-      n = c(rep(n_22, narm_22), rep(n_21, ndose))
-    ) # phase II data
-    jagsmodel.Ye_22 <- run.jags(
-      model = .logistic_model, monitor = jags_params_22, data = dataYe_22,
-      n.chains = 4, adapt = 2000, burnin = 3000,
-      sample = 5000, summarise = FALSE, thin = 1, method = "rjags",
-      plots = FALSE
-    )
-
-    codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
-    piE_mcmc_22 <- matrix(NA, nrow = (jagsmodel.Ye_22$sample * length(jagsmodel.Ye_22$mcmc)), ncol = narm_22)
-    for (j in 1:narm_22) {
-      piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])
-    }
-    # calculate BCI in the final analysis
-    BCI_c_batch[, i] <- sapply(1:(narm_22 - 1), function(r) mean(piE_mcmc_22[, narm_22] > piE_mcmc_22[, r]))
-  }
-  return(BCI_c_batch)
-}
-
-#' @keywords internal
-run.period <- function(fda.case = 1, n.stage1 = 24, n.stage2,
                        eff.ctrl, eff.A, eff.B, eff.AB, period_eff = 0,
                        batch.idx, batch.sn = 100) {
   set.seed(1233 + 10 * batch.idx + 100 * period_eff)
