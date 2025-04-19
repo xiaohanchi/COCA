@@ -17,7 +17,8 @@ COCA.getOC(
   eff.A = 0.25,
   eff.B = 0.25,
   tox.AB = c(0.3, 0.3, 0.15),
-  eff.AB = c(0.25, 0.25, 0.25),
+  eff.AB.s1 = c(0.25, 0.25, 0.25),
+  eff.AB.s2 = c(0.25, 0.25, 0.25),
   tox.upper = 0.35,
   eff.lower = 0.25,
   Cs = 0.85,
@@ -25,7 +26,6 @@ COCA.getOC(
   C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100),
   rho = 0.2,
-  period.effect = 0,
   n.simu = 10,
   seed = 123
 )
@@ -45,7 +45,9 @@ COCA.getOC(
 
 \item{tox.AB}{A vector of true toxicity probabilities for all combination doses being tested in the trial.}
 
-\item{eff.AB}{A vector of true efficacy probabilities for all combination doses being tested in the trial.}
+\item{eff.AB.s1}{A vector of true efficacy probabilities for all combination doses in stage 1.}
+
+\item{eff.AB.s2}{A vector of true efficacy probabilities for all combination doses in stage 2.}
 
 \item{tox.upper}{Highest acceptable toxicity rate (\eqn{\phi_{T}})}
 
@@ -59,11 +61,11 @@ COCA.getOC(
 
 \item{rho}{Correlation between toxicity and efficacy}
 
-\item{period.effect}{Period effect}
-
 \item{n.simu}{Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.}
 
 \item{seed}{Random seed}
+
+\item{period.effect}{Period effect}
 }
 \value{
 Returns the operating characteristics of stage 1 (selection and expected sample size) and stage 2 (power, GP, SR, OSR, and expected sample size).
@@ -78,40 +80,36 @@ COCA Simulation
 \donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  tox.SOC = 0.10, eff.SOC = 0.25,
-  tox.A = 0.25, tox.B = 0.15,
-  eff.A = 0.25, eff.B = 0.25,
-  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
-  period.effect = 0, n.simu = 20
+  tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
+  eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
+  n.simu = 20
 )}
 # Scenario 1 (period effect = 0.2)
 \donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  tox.SOC = 0.10, eff.SOC = 0.25,
-  tox.A = 0.25, tox.B = 0.15,
-  eff.A = 0.25, eff.B = 0.25,
-  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
-  period.effect = 0.2, n.simu = 20
+  tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
+  eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
+  n.simu = 20
 )}
 # Scenario 2 (period effect = 0)
 \donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  tox.SOC = 0.10, eff.SOC = 0.25,
-  tox.A = 0.25, tox.B = 0.15,
-  eff.A = 0.35, eff.B = 0.35,
-  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
-  period.effect = 0, n.simu = 20
+  tox.SOC = 0.10, eff.SOC = 0.25,  = 0.25, tox.B = 0.15,
+  eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
+  eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
+  n.simu = 20
 )}
 # Scenario 2 (period effect = 0.2)
 \donttest{
 COCA.getOC(
   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  tox.SOC = 0.10, eff.SOC = 0.25,
-  tox.A = 0.25, tox.B = 0.15,
-  eff.A = 0.35, eff.B = 0.35,
-  tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
-  period.effect = 0.2, n.simu = 20
+  tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
+  eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
+  n.simu = 20
 )}
 }

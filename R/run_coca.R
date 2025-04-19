@@ -7,7 +7,8 @@
 #' @param tox.SOC,tox.A,tox.B True toxicity probabilities for SOC, arm A, and arm B.
 #' @param tox.AB A vector of true toxicity probabilities for all combination doses being tested in the trial.
 #' @param eff.SOC,eff.A,eff.B True efficacy probabilities for SOC, arm A, and arm B.
-#' @param eff.AB A vector of true efficacy probabilities for all combination doses being tested in the trial.
+#' @param eff.AB.s1 A vector of true efficacy probabilities for all combination doses in stage 1.
+#' @param eff.AB.s2 A vector of true efficacy probabilities for all combination doses in stage 2.
 #' @param tox.upper Highest acceptable toxicity rate (\eqn{\phi_{T}})
 #' @param eff.lower Lowest acceptable efficacy rate (\eqn{\phi_{E}})
 #' @param Cs Probability cutoff in stage 1
@@ -34,57 +35,90 @@
 #' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-#'   tox.SOC = 0.10, eff.SOC = 0.25,
-#'   tox.A = 0.25, tox.B = 0.15,
-#'   eff.A = 0.25, eff.B = 0.25,
-#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
-#'   period.effect = 0, n.simu = 20
+#'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
+#'   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
+#'   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
+#'   n.simu = 20
 #' )}
 #' # Scenario 1 (period effect = 0.2)
 #' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-#'   tox.SOC = 0.10, eff.SOC = 0.25,
-#'   tox.A = 0.25, tox.B = 0.15,
-#'   eff.A = 0.25, eff.B = 0.25,
-#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
-#'   period.effect = 0.2, n.simu = 20
+#'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
+#'   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
+#'   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
+#'   n.simu = 20
 #' )}
 #' # Scenario 2 (period effect = 0)
 #' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-#'   tox.SOC = 0.10, eff.SOC = 0.25,
-#'   tox.A = 0.25, tox.B = 0.15,
-#'   eff.A = 0.35, eff.B = 0.35,
-#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
-#'   period.effect = 0, n.simu = 20
+#'   tox.SOC = 0.10, eff.SOC = 0.25,  = 0.25, tox.B = 0.15,
+#'   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
+#'   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
+#'   n.simu = 20
 #' )}
 #' # Scenario 2 (period effect = 0.2)
 #' \donttest{
 #' COCA.getOC(
 #'   n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-#'   tox.SOC = 0.10, eff.SOC = 0.25,
-#'   tox.A = 0.25, tox.B = 0.15,
-#'   eff.A = 0.35, eff.B = 0.35,
-#'   tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.55, 0.55, 0.55),
-#'   period.effect = 0.2, n.simu = 20
+#'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
+#'   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
+#'   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
+#'   n.simu = 20
 #' )}
 COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
                        tox.SOC = 0.10, eff.SOC = 0.25,
                        tox.A = 0.25, tox.B = 0.15,
                        eff.A = 0.25, eff.B = 0.25,
-                       tox.AB = c(0.30, 0.30, 0.15), eff.AB = c(0.25, 0.25, 0.25),
+                       tox.AB = c(0.30, 0.30, 0.15),
+                       eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
                        tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
                        utility.score = c(0, 60, 40, 100), rho = 0.2,
-                       period.effect = 0, n.simu = 10, seed = 123) {
+                       n.simu = 10, seed = 123) {
+  # Check input
+
+  if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
+  if (!is.numeric(n.stage1) || length(n.stage1) != 1 || n.stage1 <= 0 || n.stage1 != as.integer(n.stage1)) {
+    stop("'n.stage1' must be a positive integer.")
+  }
+  if (!is.numeric(n.stage2) || length(n.stage2) != 1 || n.stage2 <= 0 || n.stage2 != as.integer(n.stage2)) {
+    stop("'n.stage2' must be a positive integer.")
+  }
+
+  for (param_name in c("tox.SOC", "eff.SOC", "tox.A", "tox.B", "eff.A", "eff.B", "tox.upper", "eff.lower", "Ce", "Cs", "C.f1", "C.f2")) {
+    param_value <- get(param_name)
+    if (!is.numeric(param_value) || param_value < 0 || param_value > 1) {
+      stop(sprintf("'%s' must be between 0 and 1.", param_name))
+    }
+  }
+
+  if (!(length(tox.AB) == length(eff.AB.s1) && length(eff.AB.s1) == length(eff.AB.s2))) {
+    stop(sprintf("'tox.AB', 'eff.AB.s1', and 'eff.AB.s2' must have the same length."))
+  }
+
+  for (param_name in c("tox.AB", "eff.AB.s1", "eff.AB.s2")) {
+    param_value <- get(param_name)
+    if (!is.numeric(param_value) || any(param_value < 0) || any(param_value > 1)) {
+      stop(sprintf("'%s' must be between 0 and 1.", param_name))
+    }
+  }
+
+  if (length(utility.score) != 4) stop(sprintf("'utility.score' must have length 4."))
+  if (!is.numeric(rho) || length(rho) != 1 || rho < -1 || rho > 1) {
+    stop(sprintf("'rho' must be a numeric value in [-1, 1]."))
+  }
+
+
+  # Main function
+
   runjags.options(
     inits.warning = FALSE, rng.warning = FALSE, silent.jags = TRUE, silent.runjags = TRUE
   )
   Ce <- c(Ce, c0 * Ce, c0 * Ce)
 
   a <- rep(0.05, 4) # hyperparameters in dirichlet
-  n.dose.AB <- 3
+  n.dose.AB <- length(tox.AB)
   Nmax_p2 <- c(n.stage1, n.stage2) # stage 1 & stage 2
   T_21 <- 2
   A1 <- matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2) # order matrix for pi_tox_hat
@@ -120,7 +154,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
 
   ### simulation settings
   Tox_prob <- tox.AB
-  Eff_prob <- eff.AB + period.effect
+  Eff_prob <- eff.AB.s1
   Tox_prob_A <- rep(tox.A, n.dose.AB)
   Tox_prob_B <- rep(tox.B, n.dose.AB)
   Eff_prob_A <- rep(eff.A, n.dose.AB)
@@ -175,33 +209,25 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     w2 <- 1 / apply(prt_21, 1, var)
     prt_21_iso <- sapply(1:n.simu, function(r) activeSet(A2, "LS", weights = w2, y = prt_21[, r])$x)
     pre_21 <- pbeta(eff.lower, (a[3] + a[4] + Y_21[, 3, ] + Y_21[, 4, ]), (a[1] + a[2] + currn_21 - Y_21[, 3, ] - Y_21[, 4, ]))
-    if (t < T_21) { # stage I - interim analyses
-      # overly toxic stopping
+    if (t < T_21) {
       proc_21[which(proc_21 != 0 & prt_21_iso < 1 - C_s1)] <- 0
-      # ineffective stopping
       proc_21[which(proc_21 != 0 & pre_21 > C_s1)] <- 0
-      # if all doses have been terminated
-      # terminate the whole trial and no dose is selected
       BCI[which(colSums(proc_21) == 0)] <- -1
-    } else if (t == T_21) { # stage I - final analysis
-      # admissible set
-      # exclude early terminated arms in S by timing 'proc_21'
+    } else if (t == T_21) {
       Aset <- which(prt_21_iso * proc_21 > 1 - C_s2 & pre_21 * proc_21 < C_s2)
-      # deciding the optimal dose
       for (i in 1:nrow(multi_prob)) {
         pi_hat_21_iso[, i, ][-Aset] <- -100
-      } # doses not in set A
+      }
       utility <- t(sapply(1:n.dose.AB, function(r) utility.score %*% pi_hat_21_iso[r, , ]))
-
-      j_ast1 <- apply(utility, 2, which.max) # 1-dimension indicator
-      j_ast1[which(colSums(proc_21) == 0)] <- -1 # early terminated
-      j_ast1[which(apply(utility, 2, max) < 0)] <- -1 # no OBD
+      j_ast1 <- apply(utility, 2, which.max)
+      j_ast1[which(colSums(proc_21) == 0)] <- -1
+      j_ast1[which(apply(utility, 2, max) < 0)] <- -1
     }
   }
   cli_alert_info("Stage 1: done")
 
   ### Stage II (Proof of Concept)
-  Eff_prob <- Eff_prob - period.effect
+  Eff_prob <- eff.AB.s2
 
   BCI <- matrix(rep(BCI, (narm_22 - 1)), nrow = (narm_22 - 1), byrow = TRUE)
   Yt_21 <- (Y_21[, 1, ] + Y_21[, 3, ])[, which(j_ast1 > 0)]
@@ -215,7 +241,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     tox_22_all,
     tox_22_all[c(1, 4), ],
     tox_22_all[-3, ]
-  ) # scenario 1-3 C/A/B/AB
+  )
   eff_22_all <- rbind(rep(eff.SOC, sn_22), Eff_prob_A[j_ast1_tmp], Eff_prob_B[j_ast1_tmp], Eff_prob[j_ast1_tmp])
   eff_22 <- switch(case,
     eff_22_all,
@@ -246,18 +272,18 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     X2_all[-3, ]
   )
 
-  Yt_pre <- sapply(1:sn_22, function(r) c(rep(0, (narm_22 - 1)), (Yt_21[j_ast1_tmp[r], r]))) # phase II(stage I)
+  Yt_pre <- sapply(1:sn_22, function(r) c(rep(0, (narm_22 - 1)), (Yt_21[j_ast1_tmp[r], r])))
   Nt_pre <- sapply(1:sn_22, function(r) c(rep(0, (narm_22 - 1)), (currn_21[, which(j_ast1 > 0)][j_ast1_tmp[r], r])))
 
   wt <- rep(0, sn_22)
   Yt_22 <- Ye_22 <- matrix(0, nrow = narm_22, ncol = sn_22)
-  proc_22 <- matrix(1, nrow = narm_22, ncol = sn_22) # trial process of stage II
+  proc_22 <- matrix(1, nrow = narm_22, ncol = sn_22)
   currn_22 <- matrix(0, nrow = narm_22, ncol = sn_22)
   fprob_1 <- fprob_2 <- matrix(NA, nrow = narm_22, ncol = sn_22)
   cli_alert("Stage 2: in process")
   for (t in 1:T_22) {
     set.seed(seed + 10 * t)
-    currn_22 <- currn_22 + n_22 * proc_22 # current sample size
+    currn_22 <- currn_22 + n_22 * proc_22
     Yt_22 <- Yt_22 + sapply(1:sn_22, function(r) rbinom(rep(1, narm_22), n_22[, r], prob = tox_22[, r])) * proc_22
     Ye_22 <- Ye_22 + sapply(1:sn_22, function(r) rbinom(rep(1, narm_22), n_22[, r], prob = eff_22[, r])) * proc_22
     if (t < T_22) {
@@ -266,13 +292,13 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
         cli_progress_update()
         if (proc_22[narm_22, i] == 0) {
           fprob_1[, i] <- fprob_2[, i] <- -1
-        } else { # skip if AB has been terminated
+        } else {
           dataYe_22 <- list(
             x1 = X1[, i], x2 = X2[, i], period = period,
             Y = c(Ye_22[, i], Ye_21[, i]),
             N_arms = (narm_22 + n.dose.AB),
             n = c(currn_22[, i], currn_21[, which(j_ast1 > 0)][, i])
-          ) # phase II data
+          )
           jagsmodel.Ye_22 <- run.jags(
             model = logistic_model, monitor = jags_params_22, data = dataYe_22,
             n.chains = 4, adapt = 2000, burnin = 3000,
@@ -285,7 +311,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
             piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])
           }
           # futility stopping prob
-          fprob_1[, i] <- c(100, sapply(2:narm_22, function(r) mean(piE_mcmc_22[, r] > piE_mcmc_22[, 1]))) # omit the 1st arm
+          fprob_1[, i] <- c(100, sapply(2:narm_22, function(r) mean(piE_mcmc_22[, r] > piE_mcmc_22[, 1])))
           if (case %in% c(1, 3)) { # terminate single arm A or B
             fprob_2[, i] <- c(100, sapply(2:(narm_22 - 1), function(r) mean(piE_mcmc_22[, r] > piE_mcmc_22[, narm_22])), 100)
           } else {
@@ -294,13 +320,9 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
         }
       }
 
-      # overly toxic stopping
       proc_22[which(proc_22 != 0 & pbeta(tox.upper, (0.1 + Yt_pre + Yt_22), (0.1 + Nt_pre + currn_22 - Yt_pre - Yt_22)) < C_t)] <- 0
-      # futility stopping
       proc_22[which(proc_22 != 0 & fprob_1 < C.f1.trans)] <- 0
       proc_22[which(proc_22 != 0 & fprob_2 < C.f2.trans)] <- 0
-      # terminate the trial and conclude ineffective
-      # to represent the results for early termination of arm AB
       BCI[, which(proc_22[narm_22, ] == 0)] <- -2
     } else if (t == T_22) {
       cli_progress_bar("Final", total = sn_22, clear = FALSE)
@@ -314,7 +336,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
             Y = c(Ye_22[, i], Ye_21[, i]),
             N_arms = (narm_22 + n.dose.AB),
             n = c(currn_22[, i], currn_21[, which(j_ast1 > 0)][, i])
-          ) # phase II data
+          )
 
           jagsmodel.Ye_22 <- run.jags(
             model = logistic_model, monitor = jags_params_22, data = dataYe_22,
@@ -333,7 +355,6 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
           for (j in 1:narm_22) {
             piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])
           }
-          # calculate BCI in the final analysis
           BCI[, i] <- sapply(1:(narm_22 - 1), function(r) mean(piE_mcmc_22[, narm_22] > piE_mcmc_22[, r]))
         }
       }
@@ -344,7 +365,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   j_opt <- which(
     true_utility == max(
       true_utility[which(tox.AB <= tox.upper &
-        eff.AB >= eff.lower)]
+        eff.AB.s1 >= eff.lower)]
     )
   )
   ### stage 1 results
@@ -368,13 +389,13 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   j_ast1_tmp <- j_ast1[which(j_ast1 > 0)]
 
   sel.opt.g <- sapply(1:cont.simu, function(r) j_ast1_tmp[r] %in% j_opt) * 1
-  sel.opt.g <- which(sel.opt.g != 0) # correct groups
+  sel.opt.g <- which(sel.opt.g != 0)
   for (jj in which(colMeans(BCI) == -2)) {
     currn_22[, jj] <- currn_22[nrow(currn_22), jj]
   }
   currn_22 <- cbind(currn_22, matrix(0, nrow = nrow(currn_22), ncol = (n.simu - cont.simu)))
   avg.n <- mean(colSums(currn_22))
-  power <- length(which(BCI[1, ] > Ce[1])) / cont.simu # power
+  power <- length(which(BCI[1, ] > Ce[1])) / cont.simu
   GP <- length(which(BCI[1, sel.opt.g] > Ce[1])) / cont.simu
 
   SR <- switch(case,
