@@ -197,13 +197,8 @@ COCA.calibration <- function(
 }
 
 #' @keywords internal
-.find_order_stat <- function(order, q) {
-  res <- switch(order,
-    which.max(q),
-    which(q == median(q))[1],
-    which.min(q)
-  )
-  return(res)
+.find_order_stat <- function(q) {
+  which.max(q)
 }
 
 #' @keywords internal
@@ -322,7 +317,7 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   Ye_21 <- sapply(1:sn_s1, function(r) rbinom(rep(1, ndose), n_21, prob = comb_s1))
   q_hat <- (Ye_21 + 0.1) / (n_21 + 0.2)
 
-  j_ast <- sapply(1:sn_s1, function(r) .find_order_stat(order = 1, q = q_hat[, r]))
+  j_ast <- sapply(1:sn_s1, function(r) .find_order_stat(q = q_hat[, r]))
 
 
   X1_all <- sapply(1:ndose, function(r) {
