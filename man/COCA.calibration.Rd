@@ -39,7 +39,7 @@ COCA.calibration(
 \item{dosage.comb}{A named list specifying the dosage levels of drugs A and B across combination arms in stage 1.
 For example, \code{list(A = c(300, 300, 200), B = c(300, 200, 300))} defines three dose combinations:
 dose1 = (A = 300, B = 300), dose2 = (A = 300, B = 200), and dose3 = (A = 200, B = 300).
-All dosages values can be on any scale but must use the same scale across \code{dosage.singleA}, \code{dosage.singleB}, and \code{dosage.comb}.}
+All dosage values can be on any scale but must use the same scale across \code{dosage.singleA}, \code{dosage.singleB}, and \code{dosage.comb}.}
 
 \item{eff.null}{Unpromising efficacy rate (\eqn{\widetilde{q}_1}) in the global null hypothesis}
 
