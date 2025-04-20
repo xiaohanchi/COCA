@@ -8,6 +8,9 @@ COCA.calibration(
   case,
   n.stage1 = 24,
   n.stage2,
+  dosage.singleA = 300,
+  dosage.singleB = 300,
+  dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25,
   eff.alt.SOC = 0.25,
   eff.alt.A = 0.35,
@@ -28,6 +31,15 @@ COCA.calibration(
 \item{n.stage1}{Sample size for stage 1}
 
 \item{n.stage2}{Sample size for stage 2}
+
+\item{dosage.singleA}{Dosage level of drug A in the single arm for stage 2.}
+
+\item{dosage.singleB}{Dosage level of drug B in the single arm for stage 2.}
+
+\item{dosage.comb}{A named list specifying the dosage levels of drugs A and B across combination arms in stage 1.
+For example, \code{list(A = c(300, 300, 200), B = c(300, 200, 300))} defines three dose combinations:
+dose1 = (A = 300, B = 300), dose2 = (A = 300, B = 200), and dose3 = (A = 200, B = 300).
+All dosages values can be on any scale but must use the same scale across \code{dosage.singleA}, \code{dosage.singleB}, and \code{dosage.comb}.}
 
 \item{eff.null}{Unpromising efficacy rate (\eqn{\widetilde{q}_1}) in the global null hypothesis}
 
@@ -52,6 +64,8 @@ COCA.calibration(
 \item{seed}{Random seed}
 
 \item{n.simu}{Number of simulation replicates}
+
+\item{n.comb.dose}{Number of combination arms in stage 1.}
 }
 \value{
 Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.

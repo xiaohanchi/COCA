@@ -1,8 +1,15 @@
 #' COCA Calibration
 #'
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
+#' @param n.comb.dose Number of combination arms in stage 1.
 #' @param n.stage1 Sample size for stage 1
 #' @param n.stage2 Sample size for stage 2
+#' @param dosage.singleA Dosage level of drug A in the single arm for stage 2.
+#' @param dosage.singleB Dosage level of drug B in the single arm for stage 2.
+#' @param dosage.comb A named list specifying the dosage levels of drugs A and B across combination arms in stage 1.
+#'   For example, \code{list(A = c(300, 300, 200), B = c(300, 200, 300))} defines three dose combinations:
+#'   dose1 = (A = 300, B = 300), dose2 = (A = 300, B = 200), and dose3 = (A = 200, B = 300).
+#'   All dosages values can be on any scale but must use the same scale across \code{dosage.singleA}, \code{dosage.singleB}, and \code{dosage.comb}.
 #' @param eff.null Unpromising efficacy rate (\eqn{\widetilde{q}_1}) in the global null hypothesis
 #' @param eff.alt.SOC Efficacy rate of the SOC arm (\eqn{\widetilde{q}_{SOC}}) in the alternative hypothesis
 #' @param eff.alt.A Efficacy rate of single arm A (\eqn{\widetilde{q}_{A}}) in the alternative hypothesis. This argument is ignored if arm A is not included.
@@ -52,14 +59,14 @@
 
 #' @export
 #'
-COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
-                             eff.null = 0.25,
-                             eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-                             eff.alt.B = 0.35, eff.alt.AB = 0.55,
-                             period.effect = c(0.1, 0.2, 0.3),
-                             alpha.level = 0.10, alpha.max = 0.20,
-                             fsr.level = 0.05, tsr.level = 0.80,
-                             seed = 123, n.simu = 20) {
+COCA.calibration <- function(
+    case, n.stage1 = 24, n.stage2,
+    dosage.singleA = 300, dosage.singleB = 300,
+    dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+    eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+    eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+    alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+    seed = 123, n.simu = 20) {
 
   # Check input
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
@@ -263,37 +270,30 @@ COCA.calibration <- function(case, n.stage1 = 24, n.stage2,
 }
 
 #' @keywords internal
-run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
-                       eff.ctrl, eff.A, eff.B, eff.AB, period_eff = 0,
-                       batch.idx, batch.sn = 100) {
+run.whole <- function(fda.case = 1, n.comb.dose = 3,
+                      n.stage1 = 24, n.stage2,
+                      dosage.singleA = 300, dosage.singleB = 300,
+                      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+                      eff.ctrl, eff.A, eff.B, eff.AB, period_eff = 0,
+                      batch.idx, batch.sn = 100) {
   set.seed(1233 + 10 * batch.idx + 100 * period_eff)
 
   sn_s1 <- batch.sn
   fda_sc <- fda.case
-  ndose <- 3
+  ndose <- n.comb.dose
   n_21 <- n.stage1
   n_22 <- n.stage2
 
-  narm_22 <- switch(fda_sc,
-    4,
-    2,
-    3
-  )
-  period <- switch(fda_sc,
-    c(0, 0, 0, 0, 1, 1, 1),
-    c(0, 0, 0, 0, 1, 1, 1)[c(1, 4, 5, 6, 7)],
-    c(0, 0, 0, 0, 1, 1, 1)[-3]
-  )
+  narm_22 <- switch(fda_sc, 4, 2, 3)
+  vtmp <- c(rep(0, 4), rep(1, ndose))
+  period <- switch(fda_sc, vtmp, vtmp[-c(2, 3)], vtmp[-3])
 
-  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = TRUE)
-  row.names(dosage_level) <- c("A", "B")
-  dose_level_std <- t(apply(dosage_level, MARGIN = 1, .dose_standardize))
-  dose_std <- matrix(c(
-    dose_level_std["A", 1], dose_level_std["B", 1],
-    dose_level_std["A", 1], dose_level_std["B", 2],
-    dose_level_std["A", 2], dose_level_std["B", 1]
-  ), ncol = ndose, byrow = FALSE)
+  dosage.comb <- do.call(rbind, dosage.comb)
+  dose_std <- t(apply(cbind(c(dosage.singleA, dosage.singleB), dosage.comb), MARGIN = 1, .dose_standardize))
   row.names(dose_std) <- c("A", "B")
+  dose_std_single <- dose_std[, 1]
+  dose_std_comb <- dose_std[, -1]
+
 
   Econtrol <- eff.ctrl
   singleA <- eff.A
@@ -309,28 +309,14 @@ run.whole <- function(fda.case = 1, n.stage1 = 24, n.stage2,
 
 
   X1_all <- sapply(1:ndose, function(r) {
-    c(
-      dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
-      dose_std["A", r], dose_std["A", ]
-    )
+    c(0, dose_std_single["A"], 0, dose_std_comb["A", r], dose_std_comb["A", ])
   })
   X2_all <- sapply(1:ndose, function(r) {
-    c(
-      dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
-      dose_std["B", r], dose_std["B", ]
-    )
+    c(0, 0, dose_std_single["B"], dose_std_comb["B", r], dose_std_comb["B", ])
   })
-  colnames(X1_all) <- colnames(X2_all) <- c("j=1", "j=2", "j=3")
-  X1 <- switch(fda_sc,
-    X1_all,
-    X1_all[c(1, 4, 5, 6, 7), ],
-    X1_all[-3, ]
-  )
-  X2 <- switch(fda_sc,
-    X2_all,
-    X2_all[c(1, 4, 5, 6, 7), ],
-    X2_all[-3, ]
-  )
+  colnames(X1_all) <- colnames(X2_all) <- paste0("j=", 1:ndose)
+  X1 <- switch(fda_sc, X1_all, X1_all[-c(2,3), ], X1_all[-3, ])
+  X2 <- switch(fda_sc, X2_all, X2_all[-c(2,3), ], X2_all[-3, ])
 
   eff_22_all <- rbind(rep(Econtrol, sn_s1), rep(singleA, sn_s1), rep(singleB, sn_s1), rep(comb, sn_s1))
   eff_22 <- switch(fda_sc,
