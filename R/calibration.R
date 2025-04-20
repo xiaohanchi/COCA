@@ -30,9 +30,11 @@
 #' # To calibrate for a specific sample size candidate, run:
 #' \donttest{
 #' COCA.calibration(
-#'   case = 1, n.stage1 = 24, n.stage2 = 20, eff.null = 0.25,
-#'   eff.alt.SOC = 0.25, eff.alt.A = 0.35, eff.alt.B = 0.35, eff.alt.AB = 0.55,
-#'   period.effect = c(0.1, 0.2, 0.3),
+#'   case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = 20,
+#'   dosage.singleA = 300, dosage.singleB = 300,
+#'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+#'   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+#'   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
 #'   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
 #'   n.simu = 100
 #' )
@@ -43,13 +45,27 @@
 #' n.stage2 <- 10:20
 #' for (i in seq_along(n.stage2)) {
 #'   if (i == 1) {
-#'     output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
+#'     output <- COCA.calibration(
+#'       case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+#'       dosage.singleA = 300, dosage.singleB = 300,
+#'       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+#'       eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+#'       eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+#'       alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+#'       n.simu = 100)
 #'   } else {
-#'     output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
-#'     output <- bind_rows(output, output.tmp)
+#'     output.tmp <- COCA.calibration(
+#'       case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+#'       dosage.singleA = 300, dosage.singleB = 300,
+#'       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+#'       eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+#'       eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+#'       alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+#'       n.simu = 100)
+#'     output <- rbind(output, output.tmp)
 #'   }
 #' }
-#'}
+#' }
 
 #' @import stats
 #' @import pbapply
@@ -60,7 +76,7 @@
 #' @export
 #'
 COCA.calibration <- function(
-    case, n.stage1 = 24, n.stage2,
+    case, n.comb.dose = 3, n.stage1 = 24, n.stage2,
     dosage.singleA = 300, dosage.singleB = 300,
     dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
     eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
@@ -112,7 +128,8 @@ COCA.calibration <- function(
 
   cli_alert("Null Scneario: in process")
   BCI_null <- run.whole(
-    fda.case = case, n.stage1 = n.stage1, n.stage2 = n.stage2,
+    fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
+    dosage.singleA = dosage.singleA, dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
     eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
     batch.idx = seed, batch.sn = n.simu
   )
@@ -120,7 +137,8 @@ COCA.calibration <- function(
 
   cli_alert("Alternative Scneario: in process")
   BCI_alt <- run.whole(
-    fda.case = case, n.stage1 = n.stage1, n.stage2 = n.stage2,
+    fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
+    dosage.singleA = dosage.singleA, dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
     eff.ctrl = eff.alt.SOC, eff.A = eff.alt.A, eff.B = eff.alt.B, eff.AB = eff.alt.AB,
     batch.idx = seed, batch.sn = n.simu
   )
@@ -134,7 +152,8 @@ COCA.calibration <- function(
   Ce1_p <- type1.period <- c()
   for (pp in seq_along(period.effect)) {
     BCI_period[[pp]] <- run.whole(
-      fda.case = case, n.stage1 = n.stage1, n.stage2 = n.stage2,
+      fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
+      dosage.singleA = dosage.singleA, dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
       eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
       period_eff = period.effect[pp],
       batch.idx = seed, batch.sn = n.simu
@@ -270,10 +289,8 @@ COCA.calibration <- function(
 }
 
 #' @keywords internal
-run.whole <- function(fda.case = 1, n.comb.dose = 3,
-                      n.stage1 = 24, n.stage2,
-                      dosage.singleA = 300, dosage.singleB = 300,
-                      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
+                      dosage.singleA, dosage.singleB, dosage.comb,
                       eff.ctrl, eff.A, eff.B, eff.AB, period_eff = 0,
                       batch.idx, batch.sn = 100) {
   set.seed(1233 + 10 * batch.idx + 100 * period_eff)

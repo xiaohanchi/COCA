@@ -6,6 +6,7 @@
 \usage{
 COCA.calibration(
   case,
+  n.comb.dose = 3,
   n.stage1 = 24,
   n.stage2,
   dosage.singleA = 300,
@@ -27,6 +28,8 @@ COCA.calibration(
 }
 \arguments{
 \item{case}{Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.}
+
+\item{n.comb.dose}{Number of combination arms in stage 1.}
 
 \item{n.stage1}{Sample size for stage 1}
 
@@ -64,8 +67,6 @@ All dosage values can be on any scale but must use the same scale across \code{d
 \item{seed}{Random seed}
 
 \item{n.simu}{Number of simulation replicates}
-
-\item{n.comb.dose}{Number of combination arms in stage 1.}
 }
 \value{
 Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
@@ -78,9 +79,11 @@ COCA Calibration
 # To calibrate for a specific sample size candidate, run:
 \donttest{
 COCA.calibration(
-  case = 1, n.stage1 = 24, n.stage2 = 20, eff.null = 0.25,
-  eff.alt.SOC = 0.25, eff.alt.A = 0.35, eff.alt.B = 0.35, eff.alt.AB = 0.55,
-  period.effect = c(0.1, 0.2, 0.3),
+  case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = 20,
+  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+  eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+  eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
   n.simu = 100
 )
@@ -91,10 +94,24 @@ COCA.calibration(
 n.stage2 <- 10:20
 for (i in seq_along(n.stage2)) {
   if (i == 1) {
-    output <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
+    output <- COCA.calibration(
+      case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+      dosage.singleA = 300, dosage.singleB = 300,
+      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+      eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+      eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+      alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+      n.simu = 100)
   } else {
-    output.tmp <- COCA.calibration(case = 1, n.stage2 = n.stage2[i])
-    output <- bind_rows(output, output.tmp)
+    output.tmp <- COCA.calibration(
+      case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+      dosage.singleA = 300, dosage.singleB = 300,
+      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+      eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+      eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+      alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+      n.simu = 100)
+    output <- rbind(output, output.tmp)
   }
 }
 }
