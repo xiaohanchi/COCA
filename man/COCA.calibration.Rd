@@ -33,14 +33,13 @@ COCA.calibration(
 
 \item{n.stage2}{Sample size for stage 2}
 
-\item{dosage.ctrl}{Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}.If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.}
+\item{dosage.ctrl}{Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}. If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.}
 
 \item{dosage.singleA}{Dosage level of drug A in the single arm for stage 2.}
 
 \item{dosage.singleB}{Dosage level of drug B in the single arm for stage 2.}
 
-\item{dosage.comb}{A named list specifying the dosage levels of drugs A and B across combination arms in stage 1.
-For example, \code{list(A = c(300, 300, 200), B = c(300, 200, 300))} defines three dose combinations:
+\item{dosage.comb}{A named list specifying the dosage levels of drugs A and B across combination arms in stage 1. For example, \code{list(A = c(300, 300, 200), B = c(300, 200, 300))} defines three dose combinations:
 dose1 = (A = 300, B = 300), dose2 = (A = 300, B = 200), and dose3 = (A = 200, B = 300).
 All dosage values can be on any scale but must use the same scale across \code{dosage.singleA}, \code{dosage.singleB}, and \code{dosage.comb}.}
 
@@ -68,7 +67,7 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{n.simu}{Number of simulation replicates}
 
-\item{n.comb.dose}{Number of combination arms in stage 1.}
+\item{n.comb.dose}{Number of combination arms in stage 1}
 }
 \value{
 Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
@@ -82,7 +81,7 @@ COCA Calibration
 \donttest{
 COCA.calibration(
   case = 1, n.stage1 = 24, n.stage2 = 20,
-  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
@@ -95,24 +94,17 @@ COCA.calibration(
 \donttest{
 n.stage2 <- 10:20
 for (i in seq_along(n.stage2)) {
+   output.tmp <- COCA.calibration(
+      case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
+      dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
+      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+      eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+      eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+      alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+      n.simu = 100)
   if (i == 1) {
-    output <- COCA.calibration(
-      case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
-      dosage.singleA = 300, dosage.singleB = 300,
-      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-      eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-      eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-      alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-      n.simu = 100)
+    output <- output.tmp
   } else {
-    output.tmp <- COCA.calibration(
-      case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
-      dosage.singleA = 300, dosage.singleB = 300,
-      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-      eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-      eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-      alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-      n.simu = 100)
     output <- rbind(output, output.tmp)
   }
 }

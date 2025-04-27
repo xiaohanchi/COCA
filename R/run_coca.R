@@ -41,6 +41,7 @@
 #' @examples
 #' # \code{n.simu = 20} is used for illustration purposes. For more accurate results,
 #' # consider using a larger value for \code{n.simu}, such as 5000.
+#'
 #' # Scenario 1 (period effect = 0)
 #' \donttest{
 #' COCA.getOC(
@@ -54,6 +55,7 @@
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 #' )}
+#'
 #' # Scenario 1 (period effect = 0.2)
 #' \donttest{
 #' COCA.getOC(
@@ -67,6 +69,7 @@
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 #' )}
+#'
 #' # Scenario 2 (period effect = 0)
 #' \donttest{
 #' COCA.getOC(
@@ -80,6 +83,7 @@
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 #' )}
+#'
 #' # Scenario 2 (period effect = 0.2)
 #' \donttest{
 #' COCA.getOC(
