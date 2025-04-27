@@ -202,10 +202,14 @@ COCA.calibration <- function(
 }
 
 #' @keywords internal
-.get_Beta_prior <- function(n.sample = 1e6, type = 2) {
+.get_Beta_prior <- function(n.sample = 1e6, control = TRUE, type = 2) {
   set.seed(0)
   # type = 1 for vague prior on beta3; type = 2 for spike and slab prior
-  beta0 <- rnorm(n.sample, 0, sqrt(10))
+  if (control) {
+    beta0 <- rnorm(n.sample, 0, sqrt(10))
+  } else {
+    beta0 <- rnorm(n.sample, 0, 0.000001)
+  }
   beta1 <- rnorm(n.sample, 0, sqrt(10))
   beta2 <- rnorm(n.sample, 0, sqrt(10))
   if (type == 1){
@@ -291,14 +295,13 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   set.seed(1233 + 10 * batch.idx + 100 * period_eff)
 
   sn_s1 <- batch.sn
-  fda_sc <- fda.case
   ndose <- n.comb.dose
   n_21 <- n.stage1
   n_22 <- n.stage2
 
-  narm_22 <- switch(fda_sc, 4, 2, 3)
+  narm_22 <- switch(fda.case, 4, 3, 2)
   vtmp <- c(rep(0, 4), rep(1, ndose))
-  period <- switch(fda_sc, vtmp, vtmp[-c(2, 3)], vtmp[-3])
+  period <- switch(fda.case, vtmp, vtmp[-3], vtmp[-c(2, 3)])
 
   dosage.comb <- do.call(rbind, dosage.comb)
   dose_std <- t(apply(cbind(c(dosage.singleA, dosage.singleB), dosage.comb), MARGIN = 1, .dose_standardize))
@@ -327,14 +330,14 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
     c(0, 0, dose_std_single["B"], dose_std_comb["B", r], dose_std_comb["B", ])
   })
   colnames(X1_all) <- colnames(X2_all) <- paste0("j=", 1:ndose)
-  X1 <- switch(fda_sc, X1_all, X1_all[-c(2,3), ], X1_all[-3, ])
-  X2 <- switch(fda_sc, X2_all, X2_all[-c(2,3), ], X2_all[-3, ])
+  X1 <- switch(fda.case, X1_all, X1_all[-3, ], X1_all[-c(2,3), ])
+  X2 <- switch(fda.case, X2_all, X2_all[-3, ], X2_all[-c(2,3), ])
 
   eff_22_all <- rbind(rep(Econtrol, sn_s1), rep(singleA, sn_s1), rep(singleB, sn_s1), rep(comb, sn_s1))
-  eff_22 <- switch(fda_sc,
+  eff_22 <- switch(fda.case,
     eff_22_all,
-    eff_22_all[c(1, 4), ],
-    eff_22_all[-3, ]
+    eff_22_all[-3, ],
+    eff_22_all[c(1, 4), ]
   )
   BCI_c_batch <- matrix(NA, nrow = (narm_22 - 1), ncol = sn_s1) # BCI for stage II
   Ye_22 <- sapply(1:sn_s1, function(r) rbinom(rep(1, narm_22), n_22, prob = eff_22[, r]))

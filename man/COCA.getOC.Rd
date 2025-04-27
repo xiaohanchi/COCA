@@ -10,6 +10,9 @@ COCA.getOC(
   n.stage2,
   Ce,
   c0,
+  dosage.singleA = 300,
+  dosage.singleB = 300,
+  dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.1,
   eff.SOC = 0.25,
   tox.A = 0.25,
@@ -38,6 +41,15 @@ COCA.getOC(
 \item{n.stage2}{Sample size for stage 2}
 
 \item{Ce, c0}{Design cutoffs, obtained using the \code{COCA.calibration} function.}
+
+\item{dosage.singleA}{Dosage level of drug A in the single arm for stage 2.}
+
+\item{dosage.singleB}{Dosage level of drug B in the single arm for stage 2.}
+
+\item{dosage.comb}{A named list specifying the dosage levels of drugs A and B across combination arms in stage 1.
+For example, \code{list(A = c(300, 300, 200), B = c(300, 200, 300))} defines three dose combinations:
+dose1 = (A = 300, B = 300), dose2 = (A = 300, B = 200), and dose3 = (A = 200, B = 300).
+All dosage values can be on any scale but must use the same scale across \code{dosage.singleA}, \code{dosage.singleB}, and \code{dosage.comb}.}
 
 \item{tox.SOC, tox.A, tox.B}{True toxicity probabilities for SOC, arm A, and arm B.}
 

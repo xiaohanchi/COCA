@@ -4,6 +4,12 @@
 #' @param n.stage1 Sample size for stage 1
 #' @param n.stage2 Sample size for stage 2
 #' @param Ce,c0 Design cutoffs, obtained using the \code{COCA.calibration} function.
+#' @param dosage.singleA Dosage level of drug A in the single arm for stage 2.
+#' @param dosage.singleB Dosage level of drug B in the single arm for stage 2.
+#' @param dosage.comb A named list specifying the dosage levels of drugs A and B across combination arms in stage 1.
+#'   For example, \code{list(A = c(300, 300, 200), B = c(300, 200, 300))} defines three dose combinations:
+#'   dose1 = (A = 300, B = 300), dose2 = (A = 300, B = 200), and dose3 = (A = 200, B = 300).
+#'   All dosage values can be on any scale but must use the same scale across \code{dosage.singleA}, \code{dosage.singleB}, and \code{dosage.comb}.
 #' @param tox.SOC,tox.A,tox.B True toxicity probabilities for SOC, arm A, and arm B.
 #' @param tox.AB A vector of true toxicity probabilities for all combination doses being tested in the trial.
 #' @param eff.SOC,eff.A,eff.B True efficacy probabilities for SOC, arm A, and arm B.
@@ -68,6 +74,8 @@
 #'   n.simu = 20
 #' )}
 COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
+                       dosage.singleA = 300, dosage.singleB = 300,
+                       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
                        tox.SOC = 0.10, eff.SOC = 0.25,
                        tox.A = 0.25, tox.B = 0.15,
                        eff.A = 0.25, eff.B = 0.25,
@@ -111,10 +119,6 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
 
 
   # Main function
-
-  runjags.options(
-    inits.warning = FALSE, rng.warning = FALSE, silent.jags = TRUE, silent.runjags = TRUE
-  )
   Ce <- c(Ce, c0 * Ce, c0 * Ce)
 
   a <- rep(0.05, 4) # hyperparameters in dirichlet
@@ -129,28 +133,17 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   C.f1.trans <- 1 - C.f1
   C.f2.trans <- 1 - C.f2
 
-  narm_22 <- switch(case,
-    4,
-    2,
-    3
-  )
-  jags_params_22 <- c("pi", "wt")
-  logistic_model <- .logistic_model
-  period <- switch(case,
-    c(0, 0, 0, 0, 1, 1, 1),
-    c(0, 0, 0, 0, 1, 1, 1)[c(1, 4, 5, 6, 7)],
-    c(0, 0, 0, 0, 1, 1, 1)[-3]
-  )
+  narm_22 <- switch(case, 4, 3, 2)
+  vtmp <- c(rep(0, 4), rep(1, n.dose.AB))
+  period <- switch(case, vtmp, vtmp[-3], vtmp[-c(2, 3)])
 
-  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = TRUE)
-  row.names(dosage_level) <- c("A", "B")
-  dose_level_std <- t(apply(dosage_level, MARGIN = 1, .dose_standardize))
-  dose_std <- matrix(c(
-    dose_level_std["A", 1], dose_level_std["B", 1],
-    dose_level_std["A", 1], dose_level_std["B", 2],
-    dose_level_std["A", 2], dose_level_std["B", 1]
-  ), ncol = n.dose.AB, byrow = FALSE)
+
+  dosage.comb <- do.call(rbind, dosage.comb)
+  dose_std <- t(apply(cbind(c(dosage.singleA, dosage.singleB), dosage.comb), MARGIN = 1, .dose_standardize))
   row.names(dose_std) <- c("A", "B")
+  dose_std_single <- dose_std[, 1]
+  dose_std_comb <- dose_std[, -1]
+
 
   ### simulation settings
   Tox_prob <- tox.AB
@@ -164,31 +157,20 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   multi_prob <- sapply(1:n.dose.AB, function(r) .solve_level(rho, Eff_prob[r], Tox_prob[r]))
   true_utility <- utility.score %*% multi_prob
 
-  narm_21 <- n.dose.AB # #of arms in stage I
-  N_21 <- sapply(1:n.simu, function(r) rep(Nmax_p2[1], 3)) # 3xsn matrix
-  n_21 <- N_21 / T_21 # sample in each stages
-  tox_21 <- switch(narm_21,
-    c(Tox_prob, 0, 0),
-    c(Tox_prob, 0),
-    Tox_prob
-  )
-  eff_21 <- switch(narm_21,
-    c(Eff_prob, 0, 0),
-    c(Eff_prob, 0),
-    Eff_prob
-  )
+  N_21 <- sapply(1:n.simu, function(r) rep(Nmax_p2[1], n.dose.AB))
+  n_21 <- N_21 / T_21
 
-  Y_21 <- pi_hat_21 <- pi_hat_21_iso <- array(0, dim = c(narm_21, nrow(multi_prob), n.simu))
-  piT_hat_21 <- piE_hat_21 <- currn_21 <- matrix(0, nrow = 3, ncol = n.simu) # 3xsn matrix
-  proc_21 <- matrix(rep(((tox_21 + eff_21) != 0) * 1, n.simu), nrow = 3) # trial process of stage I
+  Y_21 <- pi_hat_21 <- pi_hat_21_iso <- array(0, dim = c(n.dose.AB, nrow(multi_prob), n.simu))
+  piT_hat_21 <- piE_hat_21 <- currn_21 <- matrix(0, nrow = n.dose.AB, ncol = n.simu)
+  proc_21 <- matrix(rep(((Tox_prob + Eff_prob) != 0) * 1, n.simu), nrow = n.dose.AB)
   BCI <- vector(mode = "numeric", n.simu)
   cli_alert("Stage 1: in process")
-  cli_progress_bar("Stage 1", total = T_21, clear = FALSE)
+  # cli_progress_bar("Stage 1", total = T_21, clear = FALSE)
   for (t in 1:T_21) {
-    cli_progress_update()
+    # cli_progress_update()
     set.seed(seed + 10 * t)
     currn_21 <- currn_21 + n_21 * proc_21 # current sample size
-    temp_Y <- sapply(1:narm_21, function(r) rmultinom(n.simu, n_21[1, r], multi_prob[, r]))
+    temp_Y <- sapply(1:n.dose.AB, function(r) rmultinom(n.simu, n_21[1, r], multi_prob[, r]))
     temp_Y <- array(t(temp_Y), dim = dim(Y_21))
     for (i in 1:nrow(multi_prob)) {
       temp_Y[, i, ] <- temp_Y[, i, ] * proc_21
@@ -197,10 +179,10 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     for (i in 1:nrow(multi_prob)) {
       pi_hat_21[, i, ] <- (a[i] + Y_21[, i, ]) / (sum(a) + currn_21)
     }
-    piT_hat_21 <- pi_hat_21[, 1, ] + pi_hat_21[, 3, ] # tox rate hat
+    piT_hat_21 <- pi_hat_21[, 1, ] + pi_hat_21[, 3, ]
     w1 <- 1 / apply(piT_hat_21, 1, var)
     piT_hat_21_iso <- sapply(1:n.simu, function(r) activeSet(A1, "LS", weights = w1, y = piT_hat_21[, r])$x)
-    piE_hat_21 <- pi_hat_21[, 3, ] + pi_hat_21[, 4, ] # response rate hat
+    piE_hat_21 <- pi_hat_21[, 3, ] + pi_hat_21[, 4, ]
     rho_hat <- (pi_hat_21[, 2, ] * pi_hat_21[, 3, ] - pi_hat_21[, 1, ] * pi_hat_21[, 4, ]) / sqrt(piE_hat_21 * (1 - piE_hat_21) * piT_hat_21_iso * (1 - piT_hat_21_iso))
     for (i in 1:n.dose.AB) {
       pi_hat_21_iso[i, , ] <- sapply(1:n.simu, function(r) .solve_level(rho_hat[i, r], piE_hat_21[i, r], piT_hat_21_iso[i, r]))
@@ -212,7 +194,6 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     if (t < T_21) {
       proc_21[which(proc_21 != 0 & prt_21_iso < 1 - C_s1)] <- 0
       proc_21[which(proc_21 != 0 & pre_21 > C_s1)] <- 0
-      BCI[which(colSums(proc_21) == 0)] <- -1
     } else if (t == T_21) {
       Aset <- which(prt_21_iso * proc_21 > 1 - C_s2 & pre_21 * proc_21 < C_s2)
       for (i in 1:nrow(multi_prob)) {
@@ -229,7 +210,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   ### Stage II (Proof of Concept)
   Eff_prob <- eff.AB.s2
 
-  BCI <- matrix(rep(BCI, (narm_22 - 1)), nrow = (narm_22 - 1), byrow = TRUE)
+
   Yt_21 <- (Y_21[, 1, ] + Y_21[, 3, ])[, which(j_ast1 > 0)]
   Ye_21 <- (Y_21[, 3, ] + Y_21[, 4, ])[, which(j_ast1 > 0)]
   sn_22 <- sum(j_ast1 > 0)
@@ -239,125 +220,104 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   tox_22_all <- rbind(rep(tox.SOC, sn_22), Tox_prob_A[j_ast1_tmp], Tox_prob_B[j_ast1_tmp], Tox_prob[j_ast1_tmp])
   tox_22 <- switch(case,
     tox_22_all,
-    tox_22_all[c(1, 4), ],
-    tox_22_all[-3, ]
+    tox_22_all[-3, ],
+    tox_22_all[c(1, 4), ]
   )
   eff_22_all <- rbind(rep(eff.SOC, sn_22), Eff_prob_A[j_ast1_tmp], Eff_prob_B[j_ast1_tmp], Eff_prob[j_ast1_tmp])
   eff_22 <- switch(case,
     eff_22_all,
-    eff_22_all[c(1, 4), ],
-    eff_22_all[-3, ]
+    eff_22_all[-3, ],
+    eff_22_all[c(1, 4), ]
   )
 
-  X1_all <- sapply(1:sn_22, function(r) {
-    c(
-      dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
-      dose_std["A", j_ast1_tmp[r]], dose_std["A", ]
-    )
+  X1_all <- sapply(1:n.dose.AB, function(r) {
+    c(0, dose_std_single["A"], 0, dose_std_comb["A", r], dose_std_comb["A", ])
   })
-  X2_all <- sapply(1:sn_22, function(r) {
-    c(
-      dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
-      dose_std["B", j_ast1_tmp[r]], dose_std["B", ]
-    )
+  X2_all <- sapply(1:n.dose.AB, function(r) {
+    c(0, 0, dose_std_single["B"], dose_std_comb["B", r], dose_std_comb["B", ])
   })
-  X1 <- switch(case,
-    X1_all,
-    X1_all[c(1, 4, 5, 6, 7), ],
-    X1_all[-3, ]
-  )
-  X2 <- switch(case,
-    X2_all,
-    X2_all[c(1, 4, 5, 6, 7), ],
-    X2_all[-3, ]
-  )
+  colnames(X1_all) <- colnames(X2_all) <- paste0("j=", 1:n.dose.AB)
+  X1 <- switch(case, X1_all, X1_all[-3, ], X1_all[-c(2,3), ])
+  X2 <- switch(case, X2_all, X2_all[-3, ], X2_all[-c(2,3), ])
 
   Yt_pre <- sapply(1:sn_22, function(r) c(rep(0, (narm_22 - 1)), (Yt_21[j_ast1_tmp[r], r])))
   Nt_pre <- sapply(1:sn_22, function(r) c(rep(0, (narm_22 - 1)), (currn_21[, which(j_ast1 > 0)][j_ast1_tmp[r], r])))
 
-  wt <- rep(0, sn_22)
   Yt_22 <- Ye_22 <- matrix(0, nrow = narm_22, ncol = sn_22)
   proc_22 <- matrix(1, nrow = narm_22, ncol = sn_22)
   currn_22 <- matrix(0, nrow = narm_22, ncol = sn_22)
-  fprob_1 <- fprob_2 <- matrix(NA, nrow = narm_22, ncol = sn_22)
+  # fprob_1 <- fprob_2 <- matrix(NA, nrow = narm_22, ncol = sn_22)
+
+  Beta_prior <- .get_Beta_prior(n.sample = 1e6, type = 2)
+  X.mtx.all <- lapply(1:n.dose.AB, function(r) {
+    cbind(1, X1[, r], X2[, r], (X1[, r] * X2[, r]), (X1[, r] * X2[, r] * period))
+  })
+  pE_prior_list <- lapply(1:n.dose.AB, function(r) {
+    expit(MtxProd(X.mtx.all[[r]], Beta_prior))
+  })
+  logpE_prior0_list <- lapply(1:n.dose.AB, function(r)
+    log(pE_prior_list[[r]])
+  )
+  logpE_prior1_list <- lapply(1:n.dose.AB, function(r)
+    log(1 - pE_prior_list[[r]])
+  )
+
   cli_alert("Stage 2: in process")
   for (t in 1:T_22) {
     set.seed(seed + 10 * t)
     currn_22 <- currn_22 + n_22 * proc_22
     Yt_22 <- Yt_22 + sapply(1:sn_22, function(r) rbinom(rep(1, narm_22), n_22[, r], prob = tox_22[, r])) * proc_22
     Ye_22 <- Ye_22 + sapply(1:sn_22, function(r) rbinom(rep(1, narm_22), n_22[, r], prob = eff_22[, r])) * proc_22
+    data_Y <- t(rbind(Ye_22, Ye_21))
+    data_N <- t(rbind(currn_22, currn_21[, which(j_ast1 > 0)]))
     if (t < T_22) {
-      cli_progress_bar("Interim", total = sn_22, clear = FALSE)
-      for (i in 1:sn_22) {
-        cli_progress_update()
+      # cli_progress_bar("Interim", total = sn_22, clear = FALSE)
+      fprob_all <- pbsapply(1:sn_22, function(i){
         if (proc_22[narm_22, i] == 0) {
-          fprob_1[, i] <- fprob_2[, i] <- -1
+          fprob_1 <- fprob_2 <- rep(-1, narm_22)
         } else {
-          dataYe_22 <- list(
-            x1 = X1[, i], x2 = X2[, i], period = period,
-            Y = c(Ye_22[, i], Ye_21[, i]),
-            N_arms = (narm_22 + n.dose.AB),
-            n = c(currn_22[, i], currn_21[, which(j_ast1 > 0)][, i])
+          pE_prior <- pE_prior_list[[j_ast1_tmp[i]]]
+          logpE_prior0 <- logpE_prior0_list[[j_ast1_tmp[i]]]
+          logpE_prior1 <- logpE_prior1_list[[j_ast1_tmp[i]]]
+          X.mtx <- X.mtx.all[[j_ast1_tmp[i]]]
+          pE_post <- .get_post(
+            Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
+            logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
+            data_Y = data_Y[i, ], data_N = data_N[i, ]
           )
-          jagsmodel.Ye_22 <- run.jags(
-            model = logistic_model, monitor = jags_params_22, data = dataYe_22,
-            n.chains = 4, adapt = 2000, burnin = 3000,
-            sample = 5000, summarise = FALSE, thin = 1, method = "rjags",
-            plots = FALSE, silent.jags = TRUE
-          )
-          codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
-          piE_mcmc_22 <- matrix(NA, nrow = (jagsmodel.Ye_22$sample * length(jagsmodel.Ye_22$mcmc)), ncol = narm_22)
-          for (j in 1:narm_22) {
-            piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])
-          }
           # futility stopping prob
-          fprob_1[, i] <- c(100, sapply(2:narm_22, function(r) mean(piE_mcmc_22[, r] > piE_mcmc_22[, 1])))
-          if (case %in% c(1, 3)) { # terminate single arm A or B
-            fprob_2[, i] <- c(100, sapply(2:(narm_22 - 1), function(r) mean(piE_mcmc_22[, r] > piE_mcmc_22[, narm_22])), 100)
+          fprob_1 <- c(100, sapply(2:narm_22, function(r) mean(pE_post[r, ] > pE_post[1, ])))
+          if (case %in% c(1, 2)) { # terminate single arm A or B
+            fprob_2 <- c(100, sapply(2:(narm_22 - 1), function(r) mean(pE_post[r, ] > pE_post[narm_22, ])), 100)
           } else {
-            fprob_2[, i] <- c(100, 100)
+            fprob_2 <- c(100, 100)
           }
         }
-      }
+        return(c(fprob_1, fprob_2))
+      })
+      fprob_1 <- fprob_all[1:narm_22, ]
+      fprob_2 <- fprob_all[-(1:narm_22), ]
 
       proc_22[which(proc_22 != 0 & pbeta(tox.upper, (0.1 + Yt_pre + Yt_22), (0.1 + Nt_pre + currn_22 - Yt_pre - Yt_22)) < C_t)] <- 0
       proc_22[which(proc_22 != 0 & fprob_1 < C.f1.trans)] <- 0
       proc_22[which(proc_22 != 0 & fprob_2 < C.f2.trans)] <- 0
-      BCI[, which(proc_22[narm_22, ] == 0)] <- -2
     } else if (t == T_22) {
-      cli_progress_bar("Final", total = sn_22, clear = FALSE)
-      for (i in 1:sn_22) {
-        cli_progress_update()
+      BCI <- pbsapply(1:sn_22, function(i){
         if (proc_22[narm_22, i] == 0) {
-          BCI[, i] <- -2
+          BCI <- rep(-2, (narm_22 - 1))
         } else {
-          dataYe_22 <- list(
-            x1 = X1[, i], x2 = X2[, i], period = period,
-            Y = c(Ye_22[, i], Ye_21[, i]),
-            N_arms = (narm_22 + n.dose.AB),
-            n = c(currn_22[, i], currn_21[, which(j_ast1 > 0)][, i])
+          pE_prior <- pE_prior_list[[j_ast1_tmp[i]]]
+          logpE_prior0 <- logpE_prior0_list[[j_ast1_tmp[i]]]
+          logpE_prior1 <- logpE_prior1_list[[j_ast1_tmp[i]]]
+          X.mtx <- X.mtx.all[[j_ast1_tmp[i]]]
+          pE_post <- .get_post(
+            Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
+            logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
+            data_Y = data_Y[i, ], data_N = data_N[i, ]
           )
-
-          jagsmodel.Ye_22 <- run.jags(
-            model = logistic_model, monitor = jags_params_22, data = dataYe_22,
-            n.chains = 4, adapt = 2000, burnin = 3000,
-            sample = 5000, summarise = FALSE, thin = 1, method = "rjags",
-            plots = FALSE, silent.jags = TRUE
-          )
-          codasamples.Ye_22 <- as.mcmc.list(jagsmodel.Ye_22)
-          sumYe_22 <- summary(codasamples.Ye_22)
-          wt[i] <- switch(case,
-            sumYe_22$quantiles[8, 3],
-            sumYe_22$quantiles[6, 3],
-            sumYe_22$quantiles[7, 3]
-          )
-          piE_mcmc_22 <- matrix(NA, nrow = (jagsmodel.Ye_22$sample * length(jagsmodel.Ye_22$mcmc)), ncol = narm_22)
-          for (j in 1:narm_22) {
-            piE_mcmc_22[, j] <- as.matrix(codasamples.Ye_22[, j])
-          }
-          BCI[, i] <- sapply(1:(narm_22 - 1), function(r) mean(piE_mcmc_22[, narm_22] > piE_mcmc_22[, r]))
+          BCI <- sapply(1:(narm_22 - 1), function(r) mean(pE_post[narm_22, ] > pE_post[r, ]))
         }
-      }
+      })
     }
   }
   cli_alert_info("Stage 2: done")
@@ -378,13 +338,11 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   }
   EN <- round(mean(colSums(currn_21)), 1)
   stage1_output <- c(sel, sel_all, EN)
-  names(stage1_output) <- c("termination", "dose1", "dose2", "dose3", "selection (%)", "EN")
+  names(stage1_output) <- c("termination (%)", paste0("dose", 1:n.dose.AB, " (%)"), "selection (%)", "EN")
 
   ### stage 2 results
   BCI <- BCI[, 1:sum(j_ast1 > 0)]
-  if (is.null(dim(BCI)[2])) {
-    BCI <- matrix(BCI)
-  }
+  if (is.null(dim(BCI)[2])) BCI <- matrix(BCI, nrow = 1)
   cont.simu <- dim(BCI)[2]
   j_ast1_tmp <- j_ast1[which(j_ast1 > 0)]
 
@@ -400,24 +358,24 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
 
   SR <- switch(case,
     (length(which(BCI[1, ] > Ce[1] & BCI[2, ] > Ce[2] & BCI[3, ] > Ce[3])) / cont.simu),
-    (length(which(BCI[1, ] > Ce[1])) / cont.simu),
-    (length(which(BCI[1, ] > Ce[1] & BCI[2, ] > Ce[2])) / cont.simu)
+    (length(which(BCI[1, ] > Ce[1] & BCI[2, ] > Ce[2])) / cont.simu),
+    (length(which(BCI[1, ] > Ce[1])) / cont.simu)
   )
 
   OSR <- switch(case,
     (length(which(BCI[1, sel.opt.g] > Ce[1] & BCI[2, sel.opt.g] > Ce[2] & BCI[3, sel.opt.g] > Ce[3])) / cont.simu),
-    (length(which(BCI[1, sel.opt.g] > Ce[1])) / cont.simu),
-    (length(which(BCI[1, sel.opt.g] > Ce[1] & BCI[2, sel.opt.g] > Ce[2])) / cont.simu)
+    (length(which(BCI[1, sel.opt.g] > Ce[1] & BCI[2, sel.opt.g] > Ce[2])) / cont.simu),
+    (length(which(BCI[1, sel.opt.g] > Ce[1])) / cont.simu)
   )
 
   stage2_output <- data.frame(
-    formatC(avg.n, digits = 1, format = "f"),
     formatC(power * 100, digits = 2, format = "f"),
     formatC(GP * 100, digits = 2, format = "f"),
     formatC(SR * 100, digits = 2, format = "f"),
-    formatC(OSR * 100, digits = 2, format = "f")
+    formatC(OSR * 100, digits = 2, format = "f"),
+    formatC(avg.n, digits = 1, format = "f")
   )
-  colnames(stage2_output) <- c("EN", "Power (%)", "GP (%)", "SR (%)", "OSR (%)")
+  colnames(stage2_output) <- c("Power (%)", "GP (%)", "SR (%)", "OSR (%)", "EN")
 
   return(list(
     stage1_output = stage1_output, stage2_output = stage2_output
