@@ -146,14 +146,14 @@ output
     #> # A tibble: 1 × 6
     #>    case n.stage2   Ce1    c0 Power TypeI
     #>   <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl>
-    #> 1     2       38 0.771  0.84  0.91   0.1
+    #> 1     2       38 0.771  0.84 0.914   0.1
 
-This code may take a while… (Note: In my own implementation, I used
-high-performance computing clusters and parallel computing to accelerate
-the process.) For illustration, consider using a smaller number of
-replicates (e.g., `n.simu = 100`). Once completed, we obtained the
-optimal stage 2 sample size of 38, along with design cutoffs
-$C_{e1}=0.7710$ and $c_0=84$, as reported in our paper.
+This code may take a while to run… (Note: In my own implementation, I
+used high-performance computing clusters and parallel computing to
+accelerate the process.) For illustration, consider using a smaller
+number of replicates (e.g., `n.simu = 100`). Once completed, we obtained
+the optimal stage 2 sample size of 38, along with design cutoffs
+$C_{e1}=0.7710$ and $c_0=0.84$, as reported in our paper.
 
 ##### 3. Run COCA Design
 

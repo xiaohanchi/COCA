@@ -112,7 +112,6 @@ COCA.calibration <- function(
   if (dosage.ctrl["A"] * dosage.ctrl["B"] != 0) {
     stop("dosage.ctrl: Both dosages for A and B in the control arm cannot be non-zero; at least one of them must be zero.")
   }
-
   if (any(c(dosage.ctrl, dosage.singleA, dosage.singleB, do.call(c, dosage.comb)) < 0)) {
     stop("All dosages must be greater than 0.")
   }

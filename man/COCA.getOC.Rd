@@ -10,20 +10,22 @@ COCA.getOC(
   n.stage2,
   Ce,
   c0,
-  dosage.singleA = 300,
-  dosage.singleB = 300,
-  dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-  tox.SOC = 0.1,
-  eff.SOC = 0.25,
-  tox.A = 0.25,
-  tox.B = 0.15,
-  eff.A = 0.25,
-  eff.B = 0.25,
-  tox.AB = c(0.3, 0.3, 0.15),
-  eff.AB.s1 = c(0.25, 0.25, 0.25),
-  eff.AB.s2 = c(0.25, 0.25, 0.25),
-  tox.upper = 0.35,
-  eff.lower = 0.25,
+  dosage.ctrl = c(A = 0, B = 0),
+  dosage.singleA = 0,
+  dosage.singleB = 0,
+  dosage.comb = list(A = c(), B = c()),
+  tox.SOC,
+  eff.SOC,
+  tox.A = 0,
+  tox.B = 0,
+  eff.A = 0,
+  eff.B = 0,
+  tox.AB = c(),
+  eff.AB.s1 = c(),
+  eff.AB.s2 = c(),
+  tox.isomat,
+  tox.upper,
+  eff.lower,
   Cs = 0.85,
   C.f1 = 0.9,
   C.f2 = 0.9,
@@ -41,6 +43,8 @@ COCA.getOC(
 \item{n.stage2}{Sample size for stage 2}
 
 \item{Ce, c0}{Design cutoffs, obtained using the \code{COCA.calibration} function.}
+
+\item{dosage.ctrl}{Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}.If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.}
 
 \item{dosage.singleA}{Dosage level of drug A in the single arm for stage 2.}
 
@@ -60,6 +64,8 @@ All dosage values can be on any scale but must use the same scale across \code{d
 \item{eff.AB.s1}{A vector of true efficacy probabilities for all combination doses in stage 1.}
 
 \item{eff.AB.s2}{A vector of true efficacy probabilities for all combination doses in stage 2.}
+
+\item{tox.isomat}{Matrix with 2 columns that contains isotonicity conditions for the toxicity order among the J combination doses. The format should follow the structure expected by the \code{activeSet()} function in the \code{isotone} package. For details, refer to the \href{https://cran.r-project.org/web/packages/isotone/index.html}{isotone package documentation}.}
 
 \item{tox.upper}{Highest acceptable toxicity rate (\eqn{\phi_{T}})}
 
@@ -83,7 +89,7 @@ All dosage values can be on any scale but must use the same scale across \code{d
 Returns the operating characteristics of stage 1 (selection and expected sample size) and stage 2 (power, GP, SR, OSR, and expected sample size).
 }
 \description{
-COCA Simulation
+This function uses \code{activeSet()} from the \code{isotone} package to perform isotonic regression.
 }
 \examples{
 # \code{n.simu = 20} is used for illustration purposes. For more accurate results,
@@ -92,44 +98,52 @@ COCA Simulation
 \donttest{
 COCA.getOC(
   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
-  n.simu = 20
+  tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 )}
 # Scenario 1 (period effect = 0.2)
 \donttest{
 COCA.getOC(
   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
-  n.simu = 20
+  tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 )}
 # Scenario 2 (period effect = 0)
 \donttest{
 COCA.getOC(
   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-  tox.SOC = 0.10, eff.SOC = 0.25,  = 0.25, tox.B = 0.15,
+  tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
-  n.simu = 20
+  tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 )}
 # Scenario 2 (period effect = 0.2)
 \donttest{
 COCA.getOC(
   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
-  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
-  n.simu = 20
+  tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 )}
 }
