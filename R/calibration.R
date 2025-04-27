@@ -4,6 +4,7 @@
 #' @param n.comb.dose Number of combination arms in stage 1.
 #' @param n.stage1 Sample size for stage 1
 #' @param n.stage2 Sample size for stage 2
+#' @param dosage.ctrl Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}.If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.
 #' @param dosage.singleA Dosage level of drug A in the single arm for stage 2.
 #' @param dosage.singleB Dosage level of drug B in the single arm for stage 2.
 #' @param dosage.comb A named list specifying the dosage levels of drugs A and B across combination arms in stage 1.
@@ -77,8 +78,8 @@
 #'
 COCA.calibration <- function(
     case, n.comb.dose = 3, n.stage1 = 24, n.stage2,
-    dosage.singleA = 300, dosage.singleB = 300,
-    dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+    dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 0, dosage.singleB = 0,
+    dosage.comb = list(A = c(), B = c()),
     eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
     eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
@@ -86,6 +87,21 @@ COCA.calibration <- function(
 
   # Check input
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
+  if (case == 1 & (dosage.singleA == 0 | dosage.singleB == 0)) {
+    stop("In case 1, both single arms must have dosages greater than zero.")
+  }
+  if (case == 2 & all(dosage.ctrl == 0) & (dosage.singleA * dosage.singleB != 0)) {
+    stop("In case 2, please set the dosage of the unavailable single arm (A or B) to zero.")
+  }
+  if (case == 2 & all(dosage.ctrl == 0) & (dosage.singleA == 0 & dosage.singleB == 0)) {
+    stop("In case 2, at least one of the single arms must have a dosage greater than zero.")
+  }
+  if (case == 2 & any(dosage.ctrl != 0)) {
+    if((dosage.ctrl["A"] != 0 & dosage.singleA != 0) | (dosage.ctrl["B"] != 0 & dosage.singleB != 0)){
+      stop("In case 2, where SOC is one of the single agents, please set the dosage for that single arm to zero. ")
+    }
+  }
+
   if (!is.numeric(n.stage1) || length(n.stage1) != 1 || n.stage1 <= 0 || n.stage1 != as.integer(n.stage1)) {
     stop("'n.stage1' must be a positive integer.")
   }
@@ -93,7 +109,11 @@ COCA.calibration <- function(
     stop("'n.stage2' must be a positive integer.")
   }
 
-  if (any(c(dosage.singleA, dosage.singleB, do.call(c, dosage.comb)) <= 0)) {
+  if (dosage.ctrl["A"] * dosage.ctrl["B"] != 0) {
+    stop("dosage.ctrl: Both dosages for A and B in the control arm cannot be non-zero; at least one of them must be zero.")
+  }
+
+  if (any(c(dosage.ctrl, dosage.singleA, dosage.singleB, do.call(c, dosage.comb)) < 0)) {
     stop("All dosages must be greater than 0.")
   }
 
@@ -133,7 +153,8 @@ COCA.calibration <- function(
   cli_alert("Null Scneario: in process")
   BCI_null <- run.whole(
     fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
-    dosage.singleA = dosage.singleA, dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
+    dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA,
+    dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
     eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
     batch.idx = seed, batch.sn = n.simu
   )
@@ -142,7 +163,8 @@ COCA.calibration <- function(
   cli_alert("Alternative Scneario: in process")
   BCI_alt <- run.whole(
     fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
-    dosage.singleA = dosage.singleA, dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
+    dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA,
+    dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
     eff.ctrl = eff.alt.SOC, eff.A = eff.alt.A, eff.B = eff.alt.B, eff.AB = eff.alt.AB,
     batch.idx = seed, batch.sn = n.simu
   )
@@ -157,7 +179,8 @@ COCA.calibration <- function(
   for (pp in seq_along(period.effect)) {
     BCI_period[[pp]] <- run.whole(
       fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
-      dosage.singleA = dosage.singleA, dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
+      dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA,
+      dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
       eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
       period_eff = period.effect[pp],
       batch.idx = seed, batch.sn = n.simu
@@ -293,7 +316,7 @@ COCA.calibration <- function(
 
 #' @keywords internal
 run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
-                      dosage.singleA, dosage.singleB, dosage.comb,
+                      dosage.ctrl, dosage.singleA = 0, dosage.singleB = 0, dosage.comb,
                       eff.ctrl, eff.A, eff.B, eff.AB, period_eff = 0,
                       batch.idx, batch.sn = 100) {
   set.seed(1233 + 10 * batch.idx + 100 * period_eff)
@@ -302,17 +325,25 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   ndose <- n.comb.dose
   n_21 <- n.stage1
   n_22 <- n.stage2
-
   narm_22 <- switch(fda.case, 4, 3, 2)
-  vtmp <- c(rep(0, 4), rep(1, ndose))
-  period <- switch(fda.case, vtmp, vtmp[-3], vtmp[-c(2, 3)])
+
+  if(fda.case == 1) {
+    trial.arm <- 1:4
+  } else if(fda.case == 2) {
+    trial.arm <- c(1, ifelse(dosage.singleB == 0, 2, 3), 4)
+  } else if (fda.case == 3) {
+    trial.arm <- c(1, 4)
+  }
+  period <- c(rep(0, 4)[trial.arm], rep(1, ndose))
 
   dosage.comb <- do.call(rbind, dosage.comb)
-  dose_std <- t(apply(cbind(c(dosage.singleA, dosage.singleB), dosage.comb), MARGIN = 1, .dose_standardize))
+  dose_std <- t(apply(
+    cbind(dosage.ctrl, c(dosage.singleA, dosage.singleB), dosage.comb),
+    MARGIN = 1, .dose_standardize))
   row.names(dose_std) <- c("A", "B")
-  dose_std_single <- dose_std[, 1]
-  dose_std_comb <- dose_std[, -1]
-
+  dose_std_ctrl <- dose_std[, 1]
+  dose_std_single <- dose_std[, 2]
+  dose_std_comb <- dose_std[, -(1:2)]
 
   Econtrol <- eff.ctrl
   singleA <- eff.A
@@ -323,26 +354,20 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   #### Stage I
   Ye_21 <- sapply(1:sn_s1, function(r) rbinom(rep(1, ndose), n_21, prob = comb_s1))
   q_hat <- (Ye_21 + 0.1) / (n_21 + 0.2)
-
   j_ast <- sapply(1:sn_s1, function(r) .find_order_stat(q = q_hat[, r]))
 
-
   X1_all <- sapply(1:ndose, function(r) {
-    c(0, dose_std_single["A"], 0, dose_std_comb["A", r], dose_std_comb["A", ])
+    c(dose_std_ctrl["A"], dose_std_single["A"], 0, dose_std_comb["A", r], dose_std_comb["A", ])
   })
   X2_all <- sapply(1:ndose, function(r) {
-    c(0, 0, dose_std_single["B"], dose_std_comb["B", r], dose_std_comb["B", ])
+    c(dose_std_ctrl["B"], 0, dose_std_single["B"], dose_std_comb["B", r], dose_std_comb["B", ])
   })
   colnames(X1_all) <- colnames(X2_all) <- paste0("j=", 1:ndose)
-  X1 <- switch(fda.case, X1_all, X1_all[-3, ], X1_all[-c(2,3), ])
-  X2 <- switch(fda.case, X2_all, X2_all[-3, ], X2_all[-c(2,3), ])
+  X1 <- X1_all[c(trial.arm, 5:(ndose + 4)), ]
+  X2 <- X2_all[c(trial.arm, 5:(ndose + 4)), ]
 
   eff_22_all <- rbind(rep(Econtrol, sn_s1), rep(singleA, sn_s1), rep(singleB, sn_s1), rep(comb, sn_s1))
-  eff_22 <- switch(fda.case,
-    eff_22_all,
-    eff_22_all[-3, ],
-    eff_22_all[c(1, 4), ]
-  )
+  eff_22 <- eff_22_all[trial.arm, ]
   BCI_c_batch <- matrix(NA, nrow = (narm_22 - 1), ncol = sn_s1) # BCI for stage II
   Ye_22 <- sapply(1:sn_s1, function(r) rbinom(rep(1, narm_22), n_22, prob = eff_22[, r]))
 
@@ -366,15 +391,12 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
     pE_prior <- pE_prior_list[[j_ast[i]]]
     logpE_prior0 <- logpE_prior0_list[[j_ast[i]]]
     logpE_prior1 <- logpE_prior1_list[[j_ast[i]]]
-
     X.mtx <- X.mtx.all[[j_ast[i]]]
-
     pE_post <- .get_post(
       Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
       logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
       data_Y = data_Y[i, ], data_N = data_N
     )
-
     output <- sapply(1:(narm_22 - 1), function(r) mean(pE_post[narm_22, ] > pE_post[r, ]) )
     return(output)
   })

@@ -119,7 +119,7 @@ proceed to calibrate our design parameters.
 
 ##### 3. Run COCA Design
 
-### Authors and Reference
+### Reference
 
 \[1\]. Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+).
 COCA: A Randomized Bayesian Design Integrating Dose Optimization and

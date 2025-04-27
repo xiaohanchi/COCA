@@ -105,7 +105,7 @@ We also hope to control the maximum type I error under potential period effects 
 
 ##### 3. Run COCA Design
 
-### Authors and Reference
+### Reference
 
 [1]. Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+). COCA: A Randomized Bayesian Design Integrating Dose Optimization and Component Contribution Assessment for Combination Therapies. Under Minor Revision in *Biometrics*.\
 [2]. Kelley, R. K., Sangro, B., Harris, W., et al. Safety, Efficacy, and Pharmacodynamics of Tremelimumab Plus Durvalumab for Patients With Unresectable Hepatocellular Carcinoma: Randomized Expansion of a Phase I/II Study. *Journal of Clinical Oncology*. 2021;39(27):2991-3001. <doi:10.1200/JCO.20.03555>

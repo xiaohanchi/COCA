@@ -9,9 +9,10 @@ COCA.calibration(
   n.comb.dose = 3,
   n.stage1 = 24,
   n.stage2,
-  dosage.singleA = 300,
-  dosage.singleB = 300,
-  dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+  dosage.ctrl = c(A = 0, B = 0),
+  dosage.singleA = 0,
+  dosage.singleB = 0,
+  dosage.comb = list(A = c(), B = c()),
   eff.null = 0.25,
   eff.alt.SOC = 0.25,
   eff.alt.A = 0.35,
@@ -34,6 +35,8 @@ COCA.calibration(
 \item{n.stage1}{Sample size for stage 1}
 
 \item{n.stage2}{Sample size for stage 2}
+
+\item{dosage.ctrl}{Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}.If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.}
 
 \item{dosage.singleA}{Dosage level of drug A in the single arm for stage 2.}
 
