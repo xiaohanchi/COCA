@@ -94,14 +94,15 @@ COCA.calibration(
 \donttest{
 n.stage2 <- 10:20
 for (i in seq_along(n.stage2)) {
-   output.tmp <- COCA.calibration(
-      case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
-      dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
-      dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-      eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-      eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-      alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-      n.simu = 100)
+  output.tmp <- COCA.calibration(
+    case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
+    dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
+    dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+    eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+    eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+    alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+    n.simu = 100
+  )
   if (i == 1) {
     output <- output.tmp
   } else {

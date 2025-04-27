@@ -44,14 +44,15 @@
 #' \donttest{
 #' n.stage2 <- 10:20
 #' for (i in seq_along(n.stage2)) {
-#'    output.tmp <- COCA.calibration(
-#'       case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
-#'       dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
-#'       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-#'       eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-#'       eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-#'       alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-#'       n.simu = 100)
+#'   output.tmp <- COCA.calibration(
+#'     case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
+#'     dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
+#'     dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+#'     eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
+#'     eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+#'     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+#'     n.simu = 100
+#'   )
 #'   if (i == 1) {
 #'     output <- output.tmp
 #'   } else {
@@ -76,7 +77,6 @@ COCA.calibration <- function(
     eff.alt.B = 0, eff.alt.AB, period.effect = c(0.1, 0.2, 0.3),
     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
     seed = 123, n.simu = 20) {
-
   # Check input
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
   if (case == 1 & (dosage.singleA == 0 | dosage.singleB == 0)) {
@@ -89,7 +89,7 @@ COCA.calibration <- function(
     stop("In case 2, at least one of the single arms must have a dosage greater than zero.")
   }
   if (case == 2 & any(dosage.ctrl != 0)) {
-    if((dosage.ctrl["A"] != 0 & dosage.singleA != 0) | (dosage.ctrl["B"] != 0 & dosage.singleB != 0)){
+    if ((dosage.ctrl["A"] != 0 & dosage.singleA != 0) | (dosage.ctrl["B"] != 0 & dosage.singleB != 0)) {
       stop("In case 2, where SOC is one of the single agents, please set the dosage for that single arm to zero. ")
     }
   }
@@ -136,7 +136,7 @@ COCA.calibration <- function(
       stop(sprintf("'%s' must be between 0 and 1.", param_name))
     }
   }
-  if (alpha.max < alpha.level)  stop(sprintf("'alpha.max' must be greater than or equal to 'alpha.level'."))
+  if (alpha.max < alpha.level) stop(sprintf("'alpha.max' must be greater than or equal to 'alpha.level'."))
 
   # Main function
   summary_tab <- tibble(
@@ -229,9 +229,9 @@ COCA.calibration <- function(
   }
   beta1 <- rnorm(n.sample, 0, sqrt(10))
   beta2 <- rnorm(n.sample, 0, sqrt(10))
-  if (type == 1){
+  if (type == 1) {
     beta3 <- rnorm(n.sample, 0, sqrt(10))
-  } else if (type == 2){
+  } else if (type == 2) {
     beta3.dist1 <- rnorm(n.sample, 0, sqrt(10))
     beta3.dist0 <- rnorm(n.sample, 0, 0.01)
     beta3.wt <- rbinom(n.sample, size = 1, prob = 0.5)
@@ -248,8 +248,7 @@ COCA.calibration <- function(
 
 #' @keywords internal
 .get_post <- function(Beta_prior, X.mtx, pE_prior,
-                     logpE_prior0, logpE_prior1, data_Y, data_N) {
-
+                      logpE_prior0, logpE_prior1, data_Y, data_N) {
   log_likelihood <- (data_Y %*% logpE_prior0) + ((data_N - data_Y) %*% logpE_prior1)
   likelihood <- exp(log_likelihood)
   weights <- likelihood / sum(likelihood)
@@ -315,11 +314,15 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   ndose <- n.comb.dose
   n_21 <- n.stage1
   n_22 <- n.stage2
-  narm_22 <- switch(fda.case, 4, 3, 2)
+  narm_22 <- switch(fda.case,
+    4,
+    3,
+    2
+  )
 
-  if(fda.case == 1) {
+  if (fda.case == 1) {
     trial.arm <- 1:4
-  } else if(fda.case == 2) {
+  } else if (fda.case == 2) {
     trial.arm <- c(1, ifelse(dosage.singleB == 0, 2, 3), 4)
   } else if (fda.case == 3) {
     trial.arm <- c(1, 4)
@@ -330,7 +333,8 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   dosage.comb <- do.call(rbind, dosage.comb)
   dose_std <- t(apply(
     cbind(dosage.ctrl, c(dosage.singleA, dosage.singleB), dosage.comb),
-    MARGIN = 1, .dose_standardize))
+    MARGIN = 1, .dose_standardize
+  ))
   row.names(dose_std) <- c("A", "B")
   dose_std_ctrl <- dose_std[, 1]
   dose_std_single <- dose_std[, 2]
@@ -369,12 +373,12 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   pE_prior_list <- lapply(1:ndose, function(r) {
     expit(MtxProd(X.mtx.all[[r]], Beta_prior))
   })
-  logpE_prior0_list <- lapply(1:ndose, function(r)
+  logpE_prior0_list <- lapply(1:ndose, function(r) {
     log(pE_prior_list[[r]])
-  )
-  logpE_prior1_list <- lapply(1:ndose, function(r)
+  })
+  logpE_prior1_list <- lapply(1:ndose, function(r) {
     log(1 - pE_prior_list[[r]])
-  )
+  })
   data_Y <- t(rbind(Ye_22, Ye_21))
   data_N <- c(rep(n_22, narm_22), rep(n_21, ndose))
 
@@ -388,7 +392,7 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
       logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
       data_Y = data_Y[i, ], data_N = data_N
     )
-    output <- sapply(1:(narm_22 - 1), function(r) mean(pE_post[narm_22, ] > pE_post[r, ]) )
+    output <- sapply(1:(narm_22 - 1), function(r) mean(pE_post[narm_22, ] > pE_post[r, ]))
     return(output)
   })
   return(BCI_c_batch)

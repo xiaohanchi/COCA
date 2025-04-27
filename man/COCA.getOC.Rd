@@ -107,7 +107,8 @@ COCA.getOC(
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-)}
+)
+}
 
 # Scenario 1 (period effect = 0.2)
 \donttest{
@@ -121,7 +122,8 @@ COCA.getOC(
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-)}
+)
+}
 
 # Scenario 2 (period effect = 0)
 \donttest{
@@ -135,7 +137,8 @@ COCA.getOC(
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-)}
+)
+}
 
 # Scenario 2 (period effect = 0.2)
 \donttest{
@@ -149,5 +152,6 @@ COCA.getOC(
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-)}
+)
+}
 }

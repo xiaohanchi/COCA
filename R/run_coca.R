@@ -54,7 +54,8 @@
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-#' )}
+#' )
+#' }
 #'
 #' # Scenario 1 (period effect = 0.2)
 #' \donttest{
@@ -68,7 +69,8 @@
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-#' )}
+#' )
+#' }
 #'
 #' # Scenario 2 (period effect = 0)
 #' \donttest{
@@ -82,7 +84,8 @@
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-#' )}
+#' )
+#' }
 #'
 #' # Scenario 2 (period effect = 0.2)
 #' \donttest{
@@ -96,7 +99,8 @@
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
-#' )}
+#' )
+#' }
 COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
                        dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 0, dosage.singleB = 0,
                        dosage.comb = list(A = c(), B = c()),
@@ -118,7 +122,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     stop("In case 2, at least one of the single arms must have a dosage greater than zero.")
   }
   if (case == 2 & any(dosage.ctrl != 0)) {
-    if((dosage.ctrl["A"] != 0 & dosage.singleA != 0) | (dosage.ctrl["B"] != 0 & dosage.singleB != 0)){
+    if ((dosage.ctrl["A"] != 0 & dosage.singleA != 0) | (dosage.ctrl["B"] != 0 & dosage.singleB != 0)) {
       stop("In case 2, where SOC is one of the single agents, please set the dosage for that single arm to zero. ")
     }
   }
@@ -163,27 +167,32 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
 
   # Main function
   Ce <- c(Ce, c0 * Ce, c0 * Ce)
-
-  a <- rep(0.05, 4) # hyperparameters in dirichlet
   n.dose.AB <- length(tox.AB)
   Nmax_p2 <- c(n.stage1, n.stage2) # stage 1 & stage 2
   T_21 <- 2
-  if(nrow(tox.isomat) == 1) {
+  if (nrow(tox.isomat) == 1) {
     A1 <- rbind(tox.isomat, tox.isomat)
   } else {
     A1 <- tox.isomat
   }
   A2 <- A1[, c(2, 1)]
-  T_22 <- 2
   C_s1 <- C_s2 <- Cs
-  C_t <- 0.10
   C.f1.trans <- 1 - C.f1
   C.f2.trans <- 1 - C.f2
 
-  narm_22 <- switch(case, 4, 3, 2)
-  if(case == 1) {
+
+  a <- rep(0.05, 4) # hyperparameters in dirichlet
+  T_22 <- 2
+  C_t <- 0.10
+
+  narm_22 <- switch(case,
+    4,
+    3,
+    2
+  )
+  if (case == 1) {
     trial.arm <- 1:4
-  } else if(case == 2) {
+  } else if (case == 2) {
     trial.arm <- c(1, ifelse(dosage.singleB == 0, 2, 3), 4)
   } else if (case == 3) {
     trial.arm <- c(1, 4)
@@ -194,7 +203,8 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   dosage.comb <- do.call(rbind, dosage.comb)
   dose_std <- t(apply(
     cbind(dosage.ctrl, c(dosage.singleA, dosage.singleB), dosage.comb),
-    MARGIN = 1, .dose_standardize))
+    MARGIN = 1, .dose_standardize
+  ))
   row.names(dose_std) <- c("A", "B")
   dose_std_ctrl <- dose_std[, 1]
   dose_std_single <- dose_std[, 2]
@@ -266,11 +276,11 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   j_ast1_tmp <- j_ast1[which(j_ast1 > 0)]
   tox_22_all <- rbind(
     rep(tox.SOC, sn_22), rep(tox.A, sn_22), rep(tox.B, sn_22), Tox_prob[j_ast1_tmp]
-    )
+  )
   tox_22 <- tox_22_all[trial.arm, ]
   eff_22_all <- rbind(
     rep(eff.SOC, sn_22), rep(eff.A, sn_22), rep(eff.B, sn_22), Eff_prob[j_ast1_tmp]
-    )
+  )
   eff_22 <- eff_22_all[trial.arm, ]
 
   X1_all <- sapply(1:n.dose.AB, function(r) {
@@ -297,12 +307,12 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   pE_prior_list <- lapply(1:n.dose.AB, function(r) {
     expit(MtxProd(X.mtx.all[[r]], Beta_prior))
   })
-  logpE_prior0_list <- lapply(1:n.dose.AB, function(r)
+  logpE_prior0_list <- lapply(1:n.dose.AB, function(r) {
     log(pE_prior_list[[r]])
-  )
-  logpE_prior1_list <- lapply(1:n.dose.AB, function(r)
+  })
+  logpE_prior1_list <- lapply(1:n.dose.AB, function(r) {
     log(1 - pE_prior_list[[r]])
-  )
+  })
   cli_alert("Stage 2: in process")
   for (t in 1:T_22) {
     set.seed(seed + 10 * t)
@@ -312,7 +322,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     data_Y <- t(rbind(Ye_22, Ye_21))
     data_N <- t(rbind(currn_22, currn_21[, which(j_ast1 > 0)]))
     if (t < T_22) {
-      fprob_all <- pbsapply(1:sn_22, function(i){
+      fprob_all <- pbsapply(1:sn_22, function(i) {
         if (proc_22[narm_22, i] == 0) {
           fprob_1 <- fprob_2 <- rep(-1, narm_22)
         } else {
@@ -342,7 +352,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
       proc_22[which(proc_22 != 0 & fprob_1 < C.f1.trans)] <- 0
       proc_22[which(proc_22 != 0 & fprob_2 < C.f2.trans)] <- 0
     } else if (t == T_22) {
-      BCI <- pbsapply(1:sn_22, function(i){
+      BCI <- pbsapply(1:sn_22, function(i) {
         if (proc_22[narm_22, i] == 0) {
           BCI <- rep(-2, (narm_22 - 1))
         } else {
