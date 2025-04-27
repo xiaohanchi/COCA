@@ -93,6 +93,10 @@ COCA.calibration <- function(
     stop("'n.stage2' must be a positive integer.")
   }
 
+  if (any(c(dosage.singleA, dosage.singleB, do.call(c, dosage.comb)) <= 0)) {
+    stop("All dosages must be greater than 0.")
+  }
+
   for (param_name in c("eff.null", "eff.alt.SOC", "eff.alt.A", "eff.alt.B", "eff.alt.AB")) {
     param_value <- get(param_name)
     if (!is.numeric(param_value) || param_value < 0 || param_value > 1) {

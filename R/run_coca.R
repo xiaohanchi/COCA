@@ -41,6 +41,8 @@
 #' \donttest{
 #' COCA.getOC(
 #'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   dosage.singleA = 300, dosage.singleB = 300,
+#'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
 #'   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
@@ -50,6 +52,8 @@
 #' \donttest{
 #' COCA.getOC(
 #'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   dosage.singleA = 300, dosage.singleB = 300,
+#'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
 #'   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
@@ -59,6 +63,8 @@
 #' \donttest{
 #' COCA.getOC(
 #'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   dosage.singleA = 300, dosage.singleB = 300,
+#'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25,  = 0.25, tox.B = 0.15,
 #'   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
@@ -68,6 +74,8 @@
 #' \donttest{
 #' COCA.getOC(
 #'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   dosage.singleA = 300, dosage.singleB = 300,
+#'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
 #'   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
@@ -92,6 +100,9 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   }
   if (!is.numeric(n.stage2) || length(n.stage2) != 1 || n.stage2 <= 0 || n.stage2 != as.integer(n.stage2)) {
     stop("'n.stage2' must be a positive integer.")
+  }
+  if (any(c(dosage.singleA, dosage.singleB, do.call(c, dosage.comb)) <= 0)) {
+    stop("All dosages must be greater than 0.")
   }
 
   for (param_name in c("tox.SOC", "eff.SOC", "tox.A", "tox.B", "eff.A", "eff.B", "tox.upper", "eff.lower", "Ce", "Cs", "C.f1", "C.f2")) {

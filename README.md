@@ -41,11 +41,12 @@ cutoffs and power:
 
 ``` r
 COCA.calibration(
-  case = 1, n.stage1 = 24, n.stage2 = 20, eff.null = 0.25,
-  eff.alt.SOC = 0.25, eff.alt.A = 0.35, eff.alt.B = 0.35, eff.alt.AB = 0.55,
-  period.effect = c(0.1, 0.2, 0.3),
-  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80, 
-  n.simu = 100
+  case = 1, n.stage1 = 24, n.stage1 = 24, n.stage2 = 20, 
+  dosage.singleA = 300, dosage.singleB = 300, 
+  dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
+  eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35, 
+  eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3), 
+  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80, n.simu = 100
 )
 ```
 
@@ -63,6 +64,8 @@ configurations:
 # E.g., scenario 1 (period effect = 0)
 COCA.getOC(
   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7, 
+  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15, 
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15), 
   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25), n.simu = 100
