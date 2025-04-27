@@ -103,9 +103,9 @@ We also hope to control the maximum type I error under potential period effects 
 
 ##### 2. Calibration
 
-The `COCA.calibration` function will output the corresponding power and design cutoffs ($C_{e1}$ and $c_0$). If the target FSR and TSR levels are not met with the current settings, `COCA.calibration` will return $c_0=-1$ and issue a warning suggesting an increase in the stage 2 sample size. We would like to search for the optimal stage 2 sample size, starting from 30, until the target power (`output$Power`) and success rate (`output$c0`) are achieved: 
+The `COCA.calibration` function will output the corresponding power and design cutoffs ($C_{e1}$ and $c_0$). If the target FSR and TSR levels are not met with the current settings, `COCA.calibration` will return $c_0=-1$ and issue a warning suggesting an increase in the stage 2 sample size. We would like to search for the optimal stage 2 sample size, starting from 30, until the target power (`output$Power`) and success rate (`output$c0`) are achieved:
 
-``` {r, echo = TRUE, eval = FALSE}
+```{r, echo = TRUE, eval = FALSE}
 power.target <- 0.90
 n.stage2 <- 30
 search.step <- 2
@@ -130,8 +130,11 @@ display.output <- tibble(
 )
 display.output
 ```
+This code may take a while... (Note: In my own implementation, I used high-performance computing clusters and parallel computing to accelerate the process.) For illustration, consider using a smaller number of replicates (e.g., `n.simu = 100`). Once completed, we obtained the optimal stage 2 sample size of 38, along with design cutoffs $C_{e1}=0.7710$ and $c_0=84$, as reported in our paper. 
 
 ##### 3. Run COCA Design
+
+
 
 ### Reference
 
