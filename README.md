@@ -6,29 +6,30 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-This work introduces **COCA**, a two-stage randomized phase II design
-that seamlessly integrates combination dose optimization with component
-contribution assessment. In stage 1, the optimal combination dose is
-determined by maximizing the risk–benefit tradeoff across multiple
-candidate combination doses. In stage 2, a multi-arm randomized phase is
-initiated to evaluate the contribution of each component within the
-combination therapy.
+### Overview
+
+**COCA** is a two-stage randomized phase II design that seamlessly
+integrates combination dose optimization with component contribution
+assessment. In stage 1, the optimal combination dose is determined by
+maximizing the risk–benefit tradeoff across multiple candidate
+combination doses. In stage 2, a multi-arm randomized phase is initiated
+to evaluate the contribution of each component within the combination
+therapy.
 
 <img src="./man/figures/flowchart_v0.png" width="80%"/>
 
-## Installation
-
-JAGS is required for implementing Bayesian MCMC sampling. Please
-download JAGS from <https://sourceforge.net/projects/mcmc-jags/>.
+### Installation
 
 To install the COCA package from GitHub, run:
 
 ``` r
-install.packages("devtools")
+if (!require("devtools")) {
+  install.packages("devtools")
+}
 devtools::install_github("xiaohanchi/COCA")
 ```
 
-## Usage
+### Usage
 
 Load COCA package:
 
@@ -41,8 +42,7 @@ cutoffs and power:
 
 ``` r
 COCA.calibration(
-  case = 1, n.stage1 = 24, n.stage1 = 24, n.stage2 = 20, 
-  dosage.singleA = 300, dosage.singleB = 300, 
+  case = 1, n.stage1 = 24, n.stage2 = 20, dosage.singleA = 300, dosage.singleB = 300, 
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35, 
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3), 
@@ -75,9 +75,58 @@ COCA.getOC(
 - Again, `n.simu` is set to 100 for illustration. For more accurate
   simulation, consider using a larger value, such as 10000.
 
-## Authors and Reference
+### Examples: Redesigning the NCT02519348 Trial
 
-Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+). COCA: A
-Randomized Bayesian Design Integrating Dose Optimization and Component
-Contribution Assessment for Combination Therapies. Under Minor Revision
-in *Biometrics*.
+This example provides a step-by-step tutorial on redesigning the
+NCT02519348 trial<sup>\[2\]</sup> using COCA. This trial involves four
+arms: T 300 mg $\times$ 1 dose plus D 1500 mg (T300+D), T 75 mg $\times$
+4 doses plus D 1500 mg (T75+D), D 1500 mg monotherapy, and T 750mg
+monotherapy.
+
+##### 1. Preparation
+
+To get started, we need to specify the appropriate input arguments. We
+use the log scale dosage as the dosage input for each arm:
+
+``` r
+dosage.singleA = log(750)
+dosage.singleB = log(1500) 
+dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500)))
+```
+
+Since this trial lacks a control arm, we assume the T monotherapy arm as
+the standard of care (SOC) control for illustration. Therefore, this
+trial falls into `case = 2` (S0C vs. B vs AB).
+
+The null hypothesis is $H_0: q_{21}=q_{22}=q_{23}=0.07$, so
+`eff.null = 0.07`. The alternative hypothesis is
+$H_1: q_{21}=0.07, q_{22}=0.12, q_{23}=0.25$, so:
+
+``` r
+eff.alt.SOC = 0.07
+eff.alt.A = 0.07
+eff.alt.B = 0.12
+eff.alt.AB = 0.25
+```
+
+We also hope to control the maximum type I error under potential period
+effects within the range of 0 to 0.1, so we specify
+`period.effect = seq(0, 0.1, 0.02)`. For other configurations, please
+refer to Section 5 of \[1\]. With all these arguments in place, we can
+proceed to calibrate our design parameters.
+
+##### 2. Calibration
+
+##### 3. Run COCA Design
+
+### Authors and Reference
+
+\[1\]. Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+).
+COCA: A Randomized Bayesian Design Integrating Dose Optimization and
+Component Contribution Assessment for Combination Therapies. Under Minor
+Revision in *Biometrics*.  
+\[2\]. Kelley, R. K., Sangro, B., Harris, W., et al. Safety, Efficacy,
+and Pharmacodynamics of Tremelimumab Plus Durvalumab for Patients With
+Unresectable Hepatocellular Carcinoma: Randomized Expansion of a Phase
+I/II Study. *Journal of Clinical Oncology*. 2021;39(27):2991-3001.
+<doi:10.1200/JCO.20.03555>
