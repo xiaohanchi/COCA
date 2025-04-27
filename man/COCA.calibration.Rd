@@ -6,18 +6,17 @@
 \usage{
 COCA.calibration(
   case,
-  n.comb.dose = 3,
   n.stage1 = 24,
   n.stage2,
   dosage.ctrl = c(A = 0, B = 0),
   dosage.singleA = 0,
   dosage.singleB = 0,
   dosage.comb = list(A = c(), B = c()),
-  eff.null = 0.25,
-  eff.alt.SOC = 0.25,
-  eff.alt.A = 0.35,
-  eff.alt.B = 0.35,
-  eff.alt.AB = 0.55,
+  eff.null,
+  eff.alt.SOC,
+  eff.alt.A = 0,
+  eff.alt.B = 0,
+  eff.alt.AB,
   period.effect = c(0.1, 0.2, 0.3),
   alpha.level = 0.1,
   alpha.max = 0.2,
@@ -29,8 +28,6 @@ COCA.calibration(
 }
 \arguments{
 \item{case}{Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.}
-
-\item{n.comb.dose}{Number of combination arms in stage 1.}
 
 \item{n.stage1}{Sample size for stage 1}
 
@@ -70,6 +67,8 @@ All dosage values can be on any scale but must use the same scale across \code{d
 \item{seed}{Random seed}
 
 \item{n.simu}{Number of simulation replicates}
+
+\item{n.comb.dose}{Number of combination arms in stage 1.}
 }
 \value{
 Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
@@ -82,7 +81,7 @@ COCA Calibration
 # To calibrate for a specific sample size candidate, run:
 \donttest{
 COCA.calibration(
-  case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = 20,
+  case = 1, n.stage1 = 24, n.stage2 = 20,
   dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
@@ -98,7 +97,7 @@ n.stage2 <- 10:20
 for (i in seq_along(n.stage2)) {
   if (i == 1) {
     output <- COCA.calibration(
-      case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+      case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
       dosage.singleA = 300, dosage.singleB = 300,
       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
       eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
@@ -107,7 +106,7 @@ for (i in seq_along(n.stage2)) {
       n.simu = 100)
   } else {
     output.tmp <- COCA.calibration(
-      case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+      case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
       dosage.singleA = 300, dosage.singleB = 300,
       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
       eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,

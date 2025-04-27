@@ -31,7 +31,7 @@
 #' # To calibrate for a specific sample size candidate, run:
 #' \donttest{
 #' COCA.calibration(
-#'   case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = 20,
+#'   case = 1, n.stage1 = 24, n.stage2 = 20,
 #'   dosage.singleA = 300, dosage.singleB = 300,
 #'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
@@ -47,7 +47,7 @@
 #' for (i in seq_along(n.stage2)) {
 #'   if (i == 1) {
 #'     output <- COCA.calibration(
-#'       case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+#'       case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
 #'       dosage.singleA = 300, dosage.singleB = 300,
 #'       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'       eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
@@ -56,7 +56,7 @@
 #'       n.simu = 100)
 #'   } else {
 #'     output.tmp <- COCA.calibration(
-#'       case = 1, n.comb.dose = 3, n.stage1 = 24, n.stage2 = n.stage2[i],
+#'       case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
 #'       dosage.singleA = 300, dosage.singleB = 300,
 #'       dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'       eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
@@ -77,11 +77,11 @@
 #' @export
 #'
 COCA.calibration <- function(
-    case, n.comb.dose = 3, n.stage1 = 24, n.stage2,
+    case, n.stage1 = 24, n.stage2,
     dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 0, dosage.singleB = 0,
     dosage.comb = list(A = c(), B = c()),
-    eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-    eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
+    eff.null, eff.alt.SOC, eff.alt.A = 0,
+    eff.alt.B = 0, eff.alt.AB, period.effect = c(0.1, 0.2, 0.3),
     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
     seed = 123, n.simu = 20) {
 
@@ -124,7 +124,10 @@ COCA.calibration <- function(
     }
   }
 
-  if (eff.alt.SOC > eff.alt.A || eff.alt.SOC > eff.alt.B) {
+  if (case == 1 & (eff.alt.SOC > eff.alt.A || eff.alt.SOC > eff.alt.B)) {
+    stop(sprintf("'eff.alt.SOC' should not exceed 'eff.alt.A' or 'eff.alt.B'."))
+  }
+  if (case == 2 & (eff.alt.SOC > max(eff.alt.A, eff.alt.B))) {
     stop(sprintf("'eff.alt.SOC' should not exceed 'eff.alt.A' or 'eff.alt.B'."))
   }
   if (eff.alt.A > eff.alt.AB || eff.alt.B > eff.alt.AB) {
@@ -147,9 +150,9 @@ COCA.calibration <- function(
   # Main function
   summary_tab <- tibble(
     case = case, n.stage2 = n.stage2,
-    Ce1 = NA, c0 = NA, Power = NA, TypeI = NA, TypeI_p = NA
+    Ce1 = NA, c0 = NA, Power = NA, TypeI = NA
   )
-
+  n.comb.dose <- length(dosage.comb[["A"]])
   cli_alert("Null Scneario: in process")
   BCI_null <- run.whole(
     fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
@@ -171,11 +174,9 @@ COCA.calibration <- function(
   cli_alert_info("Alternative Scneario: done")
 
   Ce1_0 <- round(quantile(BCI_null[1, ], (1 - alpha.level)), digits = 4)
-  power <- round((length(which(BCI_alt[1, ] > Ce1_0)) / dim(BCI_alt)[2]), 4)
-
   cli_alert("Period Effect: in process")
   BCI_period <- list()
-  Ce1_p <- type1.period <- c()
+  Ce1_p <- c()
   for (pp in seq_along(period.effect)) {
     BCI_period[[pp]] <- run.whole(
       fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
@@ -186,7 +187,6 @@ COCA.calibration <- function(
       batch.idx = seed, batch.sn = n.simu
     )
     Ce1_p[pp] <- round(quantile(BCI_period[[pp]][1, ], (1 - alpha.max)), digits = 4)
-    type1.period[pp] <- length(which(BCI_period[[pp]][1, ] > Ce1_0)) / dim(BCI_period[[pp]])[2]
   }
   cli_alert_info("Period Effect: done")
 
@@ -210,9 +210,8 @@ COCA.calibration <- function(
 
   summary_tab$Ce1 <- Ce1
   summary_tab$c0 <- Ce.k
-  summary_tab$Power <- power
+  summary_tab$Power <- round((length(which(BCI_alt[1, ] > Ce1)) / dim(BCI_alt)[2]), 4)
   summary_tab$TypeI <- round((length(which(BCI_null[1, ] > Ce1)) / dim(BCI_null)[2]), 4)
-  summary_tab$TypeI_p <- max(type1.period)
 
   return(summary_tab)
 }
@@ -272,19 +271,19 @@ COCA.calibration <- function(
 
 #' @keywords internal
 .find_klower <- function(fda.case = 1, k.min, BCI, Ce.1, level = 0.05) {
-  k0 <- seq(k.min, 1, 0.05)
+  k0 <- seq(k.min, 1, 0.01)
   if (fda.case == 1) {
     typei.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]) & BCI[3, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- min(k0[which(typei.eff <= level)])
   } else if (fda.case == 2) {
-    k <- 1
-  } else if (fda.case == 3) {
     typei.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- min(k0[which(typei.eff <= level)])
+  } else if (fda.case == 3) {
+    k <- 1
   }
   if (is.infinite(k)) {
     k <- -1
@@ -294,19 +293,19 @@ COCA.calibration <- function(
 
 #' @keywords internal
 .find_kupper <- function(fda.case = 1, k.min, BCI, Ce.1, level = 0.80) {
-  k0 <- seq(k.min, 1, 0.05)
+  k0 <- seq(k.min, 1, 0.01)
   if (fda.case == 1) {
     pw.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]) & BCI[3, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- max(k0[which(pw.eff >= level)])
   } else if (fda.case == 2) {
-    k <- 1
-  } else if (fda.case == 3) {
     pw.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
     k <- max(k0[which(pw.eff >= level)])
+  } else if (fda.case == 3) {
+    k <- 1
   }
   if (is.infinite(k)) {
     k <- -1
@@ -335,6 +334,7 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
     trial.arm <- c(1, 4)
   }
   period <- c(rep(0, 4)[trial.arm], rep(1, ndose))
+  prior.control <- ifelse(all(dosage.ctrl == 0), TRUE, FALSE)
 
   dosage.comb <- do.call(rbind, dosage.comb)
   dose_std <- t(apply(
@@ -374,7 +374,7 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   X.mtx.all <- lapply(1:ndose, function(r) {
     cbind(1, X1[, r], X2[, r], (X1[, r] * X2[, r]), (X1[, r] * X2[, r] * period))
   })
-  Beta_prior <- .get_Beta_prior(n.sample = 1e6, type = 2)
+  Beta_prior <- .get_Beta_prior(n.sample = 1e6, control = prior.control, type = 2)
   pE_prior_list <- lapply(1:ndose, function(r) {
     expit(MtxProd(X.mtx.all[[r]], Beta_prior))
   })

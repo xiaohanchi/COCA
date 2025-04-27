@@ -64,7 +64,7 @@ configurations:
 # E.g., scenario 1 (period effect = 0)
 COCA.getOC(
   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7, 
-  dosage.singleA = 300, dosage.singleB = 300,
+  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15, 
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15), 
@@ -85,18 +85,18 @@ monotherapy.
 
 ##### 1. Preparation
 
-To get started, we need to specify the appropriate input arguments. We
-use the log scale dosage as the dosage input for each arm:
+To get started, we need to specify the appropriate input arguments.
+Since this trial lacks a control arm, we assume the T monotherapy arm as
+the standard of care (SOC) control for illustration. Therefore, this
+trial falls into `case = 2` (S0C(A) vs. B vs AB). We use the log scale
+dosage as the dosage input for each arm:
 
 ``` r
-dosage.singleA = log(750)
+dosage.ctrl = c(A = log(750), B = 0)
+dosage.singleA = 0 #Set to zero since single agent A is considered as the control arm
 dosage.singleB = log(1500) 
 dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500)))
 ```
-
-Since this trial lacks a control arm, we assume the T monotherapy arm as
-the standard of care (SOC) control for illustration. Therefore, this
-trial falls into `case = 2` (S0C vs. B vs AB).
 
 The null hypothesis is $H_0: q_{21}=q_{22}=q_{23}=0.07$, so
 `eff.null = 0.07`. The alternative hypothesis is
@@ -104,7 +104,6 @@ $H_1: q_{21}=0.07, q_{22}=0.12, q_{23}=0.25$, so:
 
 ``` r
 eff.alt.SOC = 0.07
-eff.alt.A = 0.07
 eff.alt.B = 0.12
 eff.alt.AB = 0.25
 ```
@@ -116,6 +115,31 @@ refer to Section 5 of \[1\]. With all these arguments in place, we can
 proceed to calibrate our design parameters.
 
 ##### 2. Calibration
+
+We would like to search for the optimal stage 2 sample size from the
+range between 30 and 50:
+
+``` r
+n2.search <- seq(30, 50, 2)
+for(i in seq_along(n2.search)){
+  output.tmp <- COCA.calibration(
+    case = 2, n.stage1 = 24, n.stage2 = n2.search[i], 
+    dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
+    dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500))),
+    eff.null = 0.07, eff.alt.SOC = 0.07, eff.alt.B = 0.12, eff.alt.AB = 0.25, 
+    period.effect = seq(0, 0.1, 0.02), alpha.level = 0.10, alpha.max = 0.20, 
+    fsr.level = 0.05, tsr.level = 0.80, n.simu = 10000
+  )
+  if(i == 1) {
+    output <- output.tmp
+  } else {
+    output <- rbind(output, output.tmp)
+  }
+}
+
+optimal.settings <- output %>% filter(Power >= 0.90 & c0 != -1) %>% slice(1)
+optimal.settings
+```
 
 ##### 3. Run COCA Design
 
