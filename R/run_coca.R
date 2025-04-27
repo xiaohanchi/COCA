@@ -174,8 +174,6 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     A1 <- tox.isomat
   }
   A2 <- A1[, c(2, 1)]
-  # A1 <- matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2) # order matrix for pi_tox_hat
-  # A2 <- matrix(c(1, 2, 1, 3), byrow = TRUE, nrow = 2) # order matrix for prob
   T_22 <- 2
   C_s1 <- C_s2 <- Cs
   C_t <- 0.10

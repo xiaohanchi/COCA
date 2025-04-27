@@ -160,13 +160,12 @@ $C_{e1}=0.7710$ and $c_0=0.84$, as reported in our paper.
 The `COCA.getOC` function is used to obtain the operating
 characteristics of stage 1 (selection and expected sample size) and
 stage 2 (power, GP, SR, OSR, and expected sample size) of COCA. So far,
-we have determined the optimal design parameters: `n.stage2 = 38`,
+we have obtained the optimal design parameters: `n.stage2 = 38`,
 `Ce = 0.7710`, and `c0 = 0.84`. To assess the design performance, we
-still need to specify the true efficacy and toxicity rates. We used the
-observed trial outcomes to : The toxicity rates in the four arms (T
-vs. D vs. T300+D vs. T75+D) were 24.6%, 10.9%, 17.6%, and 14.6%, and
-efficacy rates were 7.2%, 10.6%, 24.0%, and 9.5%, respectively.
-Therefore:
+still need to specify the true efficacy and toxicity rates. Using the
+observed trial outcomes: the toxicity rates in the four arms (T vs. D
+vs. T300+D vs. T75+D) were 24.6%, 10.9%, 17.6%, and 14.6%, and efficacy
+rates were 7.2%, 10.6%, 24.0%, and 9.5%, respectively. Therefore:
 
 ``` r
 tox.SOC = 0.246
@@ -177,6 +176,13 @@ eff.SOC = 0.072
 eff.B = 0.106
 eff.AB.s1 = c(0.240, 0.095) # assume no period effect
 eff.AB.s2 = c(0.240, 0.095)
+```
+
+We assume the toxicity ordering between the two combination doses is
+T300+D $\geq$ T75+D, so
+
+``` r
+tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1)
 ```
 
 We use a utility score of `utility.score = c(0, 40, 60, 100)` in stage 1
@@ -199,6 +205,21 @@ COCA.getOC(
   )
 ```
 
+    #> $stage1_output
+    #> termination (%)       dose1 (%)       dose2 (%)   selection (%)              EN 
+    #>            1.44           83.54           15.02           83.54           43.79 
+    #> 
+    #> $stage2_output
+    #> Power (%)    GP (%)    SR (%)   OSR (%)        EN 
+    #>     78.10     74.19     69.48     67.53    104.60
+
+In stage 1, we have an 83.54% chance of selecting the correct
+combination dose as the OBD, with an average sample size of 43.79
+patients. In stage 2, the power of our design is 78.10%, the GP is
+74.19%, the SR is 69.48%, and the OSR is 67.53%, with an average sample
+size of 104.60 patients. In total, the trial requires an average of
+148.39 patients (43.79 in stage 1 and 104.60 in stage 2).
+
 If the ORRs of the combinations in stage 1 are 5% higher than the stage
 2 rates (i.e., period effect = 0.05), run:
 
@@ -215,6 +236,14 @@ COCA.getOC(
   utility.score = c(0, 40, 60, 100), rho = 0.2, n.simu = 5000
   )
 ```
+
+    #> $stage1_output
+    #> termination (%)       dose1 (%)       dose2 (%)   selection (%)              EN 
+    #>            0.30           81.60           18.10           81.60           45.88 
+    #> 
+    #> $stage2_output
+    #> Power (%)    GP (%)    SR (%)   OSR (%)        EN 
+    #>     78.44     73.84     71.78     69.07    105.50
 
 ### Reference
 
