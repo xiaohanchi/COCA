@@ -134,7 +134,36 @@ This code may take a while to run... (Note: In my own implementation, I used hig
 
 ##### 3. Run COCA Design
 
+First, let's assume no period effect between stages 1 and 2 and obtain the design operating characteristics:
 
+```{r, echo = TRUE, eval = FALSE}
+COCA.getOC(
+  case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.84, 
+  dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
+  dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500))), 
+  tox.SOC = 0.246, eff.SOC = 0.072, tox.B = 0.109, eff.B = 0.106, 
+  tox.AB = c(0.176, 0.146), eff.AB.s1 = c(0.240, 0.095), eff.AB.s2 = c(0.240, 0.095), 
+  tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
+  tox.upper = 0.35, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
+  utility.score = c(0, 40, 60, 100), rho = 0.2, n.simu = 5000
+  )
+```
+
+
+If the ORRs of the combinations in stage 1 are 5\% higher than the stage 2 rates (i.e., period effect = 0.05), run:
+
+```{r, echo = TRUE, eval = FALSE}
+COCA.getOC(
+  case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.84, 
+  dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
+  dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500))), 
+  tox.SOC = 0.246, eff.SOC = 0.072, tox.B = 0.109, eff.B = 0.106, 
+  tox.AB = c(0.176, 0.146), eff.AB.s1 = (c(0.240, 0.095) + 0.05), eff.AB.s2 = c(0.240, 0.095), 
+  tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
+  tox.upper = 0.35, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
+  utility.score = c(0, 40, 60, 100), rho = 0.2, n.simu = 5000
+  )
+```
 
 ### Reference
 
