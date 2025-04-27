@@ -116,30 +116,37 @@ proceed to calibrate our design parameters.
 
 ##### 2. Calibration
 
-We would like to search for the optimal stage 2 sample size from the
-range between 30 and 50:
+The `COCA.calibration` function will output the corresponding power and
+design cutoffs ($C_{e1}$ and $c_0$). If the target FSR and TSR levels
+are not met with the current settings, `COCA.calibration` will return
+$c_0=-1$ and issue a warning suggesting an increase in the stage 2
+sample size. We would like to search for the optimal stage 2 sample
+size, starting from 30, until the target power (`output$Power`) and
+success rate (`output$c0`) are achieved:
 
 ``` r
-n2.search <- seq(30, 50, 2)
-for(i in seq_along(n2.search)){
-  output.tmp <- COCA.calibration(
-    case = 2, n.stage1 = 24, n.stage2 = n2.search[i], 
+power.target <- 0.90
+n.stage2 <- 30
+search.step <- 2
+while(output$Power < power.target | output$c0 == -1){
+  output <- COCA.calibration(
+    case = 2, n.stage1 = 24, n.stage2 = n.stage2, 
     dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
     dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500))),
     eff.null = 0.07, eff.alt.SOC = 0.07, eff.alt.B = 0.12, eff.alt.AB = 0.25, 
     period.effect = seq(0, 0.1, 0.02), alpha.level = 0.10, alpha.max = 0.20, 
     fsr.level = 0.05, tsr.level = 0.80, n.simu = 10000
   )
-  if(i == 1) {
-    output <- output.tmp
-  } else {
-    output <- rbind(output, output.tmp)
-  }
+  n.stage2 <- n.stage2 + search.step
 }
 
-optimal.settings <- output %>% filter(Power >= 0.90 & c0 != -1) %>% slice(1)
-optimal.settings
+output
 ```
+
+    #> # A tibble: 1 × 6
+    #>    case n.stage2   Ce1    c0 Power TypeI
+    #>   <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl>
+    #> 1     2       38 0.771  0.84  0.91   0.1
 
 ##### 3. Run COCA Design
 

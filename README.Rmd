@@ -5,6 +5,7 @@ output: github_document
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
+library(tibble)
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -102,13 +103,13 @@ We also hope to control the maximum type I error under potential period effects 
 
 ##### 2. Calibration
 
-We would like to search for the optimal stage 2 sample size from the range between 30 and 50:
+The `COCA.calibration` function will output the corresponding power and design cutoffs ($C_{e1}$ and $c_0$). If the target FSR and TSR levels are not met with the current settings, `COCA.calibration` will return $c_0=-1$ and issue a warning suggesting an increase in the stage 2 sample size. We would like to search for the optimal stage 2 sample size, starting from 30, until the target power (`output$Power`) and success rate (`output$c0`) are achieved: 
 
-``` {r}
+``` {r, echo = TRUE, eval = FALSE}
 power.target <- 0.90
 n.stage2 <- 30
 search.step <- 2
-while(output$Power < power.target | c0 == -1){
+while(output$Power < power.target | output$c0 == -1){
   output <- COCA.calibration(
     case = 2, n.stage1 = 24, n.stage2 = n.stage2, 
     dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
@@ -121,6 +122,13 @@ while(output$Power < power.target | c0 == -1){
 }
 
 output
+```
+
+```{r, echo = FALSE}
+display.output <- tibble(
+  case = 2, n.stage2 = 38, Ce1 = 0.7710, c0 = 0.84, Power = 0.91, TypeI = 0.10
+)
+display.output
 ```
 
 ##### 3. Run COCA Design
