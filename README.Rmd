@@ -103,7 +103,7 @@ We also hope to control the maximum type I error under potential period effects 
 
 ##### 2. Calibration
 
-The `COCA.calibration` function will output the corresponding power and design cutoffs ($C_{e1}$ and $c_0$). If the target FSR and TSR levels are not met with the current settings, `COCA.calibration` will return $c_0=-1$ and issue a warning suggesting an increase in the stage 2 sample size. We would like to search for the optimal stage 2 sample size, starting from 30, until the target power (`output$Power`) and success rate (`output$c0`) are achieved:
+The `COCA.calibration` function will output the corresponding power and design cutoffs ($C_{e1}$ and $c_0$). If the target FSR and TSR levels are not met with the current settings, `COCA.calibration` will return $c_0=-1$ and issue a warning suggesting an increase in the stage 2 sample size. We would like to assume `n.stage1 = 24` and search for the optimal stage 2 sample size, starting from 30, until the target power (`output$Power`) and success rate (`output$c0`) are achieved:
 
 ```{r, echo = TRUE, eval = FALSE}
 power.target <- 0.90
@@ -112,8 +112,8 @@ search.step <- 2
 while(output$Power < power.target | output$c0 == -1){
   output <- COCA.calibration(
     case = 2, n.stage1 = 24, n.stage2 = n.stage2, 
-    dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
-    dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500))),
+    dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
+    dosage.singleB = dosage.singleB,  dosage.comb = dosage.comb,
     eff.null = 0.07, eff.alt.SOC = 0.07, eff.alt.B = 0.12, eff.alt.AB = 0.25, 
     period.effect = seq(0, 0.1, 0.02), alpha.level = 0.10, alpha.max = 0.20, 
     fsr.level = 0.05, tsr.level = 0.80, n.simu = 10000
@@ -134,15 +134,29 @@ This code may take a while to run... (Note: In my own implementation, I used hig
 
 ##### 3. Run COCA Design
 
+The `COCA.getOC` function is used to obtain the operating characteristics of stage 1 (selection and expected sample size) and stage 2 (power, GP, SR, OSR, and expected sample size) of COCA. 
+So far, we have determined the optimal design parameters: `n.stage2 = 38`, `Ce = 0.7710`, and `c0 = 0.84`. To assess the design performance, we still need to specify the true efficacy and toxicity rates. We used the observed trial outcomes to : The toxicity rates in the four arms (T vs. D vs. T300+D vs. T75+D) were 24.6\%, 10.9\%, 17.6\%, and 14.6\%, and efficacy rates were 7.2\%, 10.6\%, 24.0\%, and 9.5\%, respectively. Therefore:
+```{r}
+tox.SOC = 0.246
+tox.B = 0.109
+tox.AB = c(0.176, 0.146)
+
+eff.SOC = 0.072
+eff.B = 0.106
+eff.AB.s1 = c(0.240, 0.095) # assume no period effect
+eff.AB.s2 = c(0.240, 0.095)
+```
+We use a utility score of `utility.score = c(0, 40, 60, 100)` in stage 1 dose optimization. For additional configurations, please refer to Section 5 of [1].
+
 First, let's assume no period effect between stages 1 and 2 and obtain the design operating characteristics:
 
 ```{r, echo = TRUE, eval = FALSE}
 COCA.getOC(
   case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.84, 
-  dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
-  dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500))), 
-  tox.SOC = 0.246, eff.SOC = 0.072, tox.B = 0.109, eff.B = 0.106, 
-  tox.AB = c(0.176, 0.146), eff.AB.s1 = c(0.240, 0.095), eff.AB.s2 = c(0.240, 0.095), 
+  dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
+  dosage.singleB = dosage.singleB,  dosage.comb = dosage.comb,
+  tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
+  tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
   tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
   tox.upper = 0.35, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
   utility.score = c(0, 40, 60, 100), rho = 0.2, n.simu = 5000
@@ -153,12 +167,13 @@ COCA.getOC(
 If the ORRs of the combinations in stage 1 are 5\% higher than the stage 2 rates (i.e., period effect = 0.05), run:
 
 ```{r, echo = TRUE, eval = FALSE}
+eff.AB.s1 <- c(0.240, 0.095) + 0.05
 COCA.getOC(
   case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.84, 
-  dosage.ctrl = c(A = log(750), B = 0), dosage.singleA = 0, dosage.singleB = log(1500), 
-  dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500))), 
-  tox.SOC = 0.246, eff.SOC = 0.072, tox.B = 0.109, eff.B = 0.106, 
-  tox.AB = c(0.176, 0.146), eff.AB.s1 = (c(0.240, 0.095) + 0.05), eff.AB.s2 = c(0.240, 0.095), 
+  dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
+  dosage.singleB = dosage.singleB,  dosage.comb = dosage.comb,
+  tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
+  tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
   tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
   tox.upper = 0.35, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
   utility.score = c(0, 40, 60, 100), rho = 0.2, n.simu = 5000
