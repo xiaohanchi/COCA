@@ -196,14 +196,14 @@ COCA.calibration <- function(
   }
 
   if (Ce.k == -1) {
-    warning("No k value fulfilling the condition was found. Consider increasing the sample size.")
+    warning(paste0("n.stage2 = ", n.stage2, ": No k value fulfilling the condition was found. Consider increasing the sample size."))
   }
 
   summary_tab$Ce1 <- Ce1
   summary_tab$c0 <- Ce.k
   summary_tab$Power <- round((length(which(BCI_alt[1, ] > Ce1)) / dim(BCI_alt)[2]), 4)
   summary_tab$TypeI <- round((length(which(BCI_null[1, ] > Ce1)) / dim(BCI_null)[2]), 4)
-
+  cli_alert_info(paste0("DONE (n.stage2 = ", n.stage2, ")"))
   return(summary_tab)
 }
 

@@ -132,6 +132,7 @@ optimal stage 2 sample size, starting from 30, until the target power
 power.target <- 0.90
 n.stage2 <- 30
 search.step <- 2
+output <- list(Power = 0, c0 = -1)
 while(output$Power < power.target | output$c0 == -1){
   output <- COCA.calibration(
     case = 2, n.stage1 = 24, n.stage2 = n.stage2, 
@@ -222,7 +223,9 @@ combination dose as the OBD, with an average sample size of 43.79
 patients. In stage 2, the power of our design is 78.10%, the GP is
 74.19%, the SR is 69.48%, and the OSR is 67.53%, with an average sample
 size of 104.60 patients. In total, the trial requires an average of
-148.39 patients (43.79 in stage 1 and 104.60 in stage 2).
+148.39 patients (43.79 in stage 1 and 104.60 in stage 2). For
+illustration, consider using a smaller number of replicates (e.g.,
+`n.simu = 100`).
 
 If the ORRs of the combinations in stage 1 are 5% higher than the stage
 2 rates (i.e., period effect = 0.05), run:
