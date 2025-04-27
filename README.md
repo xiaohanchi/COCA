@@ -42,7 +42,8 @@ cutoffs and power:
 
 ``` r
 COCA.calibration(
-  case = 1, n.stage1 = 24, n.stage2 = 20, dosage.singleA = 300, dosage.singleB = 300, 
+  case = 1, n.stage1 = 24, n.stage2 = 20, 
+  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300, 
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35, 
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3), 
@@ -68,7 +69,10 @@ COCA.getOC(
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15, 
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15), 
-  eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25), n.simu = 100
+  eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25), 
+  tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
 )
 ```
 
