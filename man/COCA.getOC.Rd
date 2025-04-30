@@ -32,6 +32,7 @@ COCA.getOC(
   utility.score = c(0, 60, 40, 100),
   rho = 0.2,
   n.simu = 10,
+  prior.sample,
   seed = 123
 )
 }
@@ -81,6 +82,8 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{n.simu}{Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.}
 
+\item{prior.sample}{Number of prior draws in each simulation}
+
 \item{seed}{Random seed}
 
 \item{period.effect}{Period effect}
@@ -98,7 +101,7 @@ This function uses \code{activeSet()} from the \code{isotone} package to perform
 # Scenario 1 (period effect = 0)
 \donttest{
 COCA.getOC(
-  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -106,14 +109,14 @@ COCA.getOC(
   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+  utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }
 
 # Scenario 1 (period effect = 0.2)
 \donttest{
 COCA.getOC(
-  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -121,14 +124,14 @@ COCA.getOC(
   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+  utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }
 
 # Scenario 2 (period effect = 0)
 \donttest{
 COCA.getOC(
-  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -136,14 +139,14 @@ COCA.getOC(
   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+  utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }
 
 # Scenario 2 (period effect = 0.2)
 \donttest{
 COCA.getOC(
-  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -151,7 +154,7 @@ COCA.getOC(
   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+  utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }
 }

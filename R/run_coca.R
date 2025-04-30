@@ -25,6 +25,7 @@
 #' @param rho Correlation between toxicity and efficacy
 #' @param period.effect Period effect
 #' @param n.simu Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.
+#' @param prior.sample Number of prior draws in each simulation
 #' @param seed Random seed
 #' @description This function uses `activeSet()` from the `isotone` package to perform isotonic regression.
 #'
@@ -45,7 +46,7 @@
 #' # Scenario 1 (period effect = 0)
 #' \donttest{
 #' COCA.getOC(
-#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
 #'   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
 #'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -53,14 +54,14 @@
 #'   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-#'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+#'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
 #'
 #' # Scenario 1 (period effect = 0.2)
 #' \donttest{
 #' COCA.getOC(
-#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
 #'   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
 #'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -68,14 +69,14 @@
 #'   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-#'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+#'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
 #'
 #' # Scenario 2 (period effect = 0)
 #' \donttest{
 #' COCA.getOC(
-#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
 #'   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
 #'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -83,14 +84,14 @@
 #'   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-#'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+#'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
 #'
 #' # Scenario 2 (period effect = 0.2)
 #' \donttest{
 #' COCA.getOC(
-#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7,
+#'   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
 #'   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
 #'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
@@ -98,7 +99,7 @@
 #'   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
 #'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-#'   utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+#'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
 COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
@@ -108,7 +109,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
                        tox.AB = c(), eff.AB.s1 = c(), eff.AB.s2 = c(), tox.isomat,
                        tox.upper, eff.lower, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
                        utility.score = c(0, 60, 40, 100), rho = 0.2,
-                       n.simu = 10, seed = 123) {
+                       n.simu = 10, prior.sample, seed = 123) {
   # Check input
 
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
@@ -300,18 +301,8 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   proc_22 <- matrix(1, nrow = narm_22, ncol = sn_22)
   currn_22 <- matrix(0, nrow = narm_22, ncol = sn_22)
 
-  Beta_prior <- .get_Beta_prior(n.sample = 1e6, control = prior.control, type = 2)
   X.mtx.all <- lapply(1:n.dose.AB, function(r) {
     cbind(1, X1[, r], X2[, r], (X1[, r] * X2[, r]), (X1[, r] * X2[, r] * period))
-  })
-  pE_prior_list <- lapply(1:n.dose.AB, function(r) {
-    expit(MtxProd(X.mtx.all[[r]], Beta_prior))
-  })
-  logpE_prior0_list <- lapply(1:n.dose.AB, function(r) {
-    log(pE_prior_list[[r]])
-  })
-  logpE_prior1_list <- lapply(1:n.dose.AB, function(r) {
-    log(1 - pE_prior_list[[r]])
   })
   cli_alert("Stage 2: in process")
   for (t in 1:T_22) {
@@ -321,53 +312,50 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     Ye_22 <- Ye_22 + sapply(1:sn_22, function(r) rbinom(rep(1, narm_22), n_22[, r], prob = eff_22[, r])) * proc_22
     data_Y <- t(rbind(Ye_22, Ye_21))
     data_N <- t(rbind(currn_22, currn_21[, which(j_ast1 > 0)]))
-    if (t < T_22) {
-      fprob_all <- pbsapply(1:sn_22, function(i) {
-        if (proc_22[narm_22, i] == 0) {
-          fprob_1 <- fprob_2 <- rep(-1, narm_22)
-        } else {
-          pE_prior <- pE_prior_list[[j_ast1_tmp[i]]]
-          logpE_prior0 <- logpE_prior0_list[[j_ast1_tmp[i]]]
-          logpE_prior1 <- logpE_prior1_list[[j_ast1_tmp[i]]]
-          X.mtx <- X.mtx.all[[j_ast1_tmp[i]]]
-          pE_post <- .get_post(
-            Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
-            logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
-            data_Y = data_Y[i, ], data_N = data_N[i, ]
+    fprob_all <- pbsapply(1:sn_22, function(i) {
+      if (proc_22[narm_22, i] == 0) {
+        fprob_1 <- fprob_2 <- rep(-1, narm_22)
+        if (t == T_22) BCI <- rep(-2, (narm_22 - 1))
+      } else {
+        Beta_prior <- .get_Beta_prior(
+          n.sample = prior.sample, control = prior.control, type = 2, seed = i
           )
-          # futility stopping prob
-          fprob_1 <- c(100, sapply(2:narm_22, function(r) mean(pE_post[r, ] > pE_post[1, ])))
-          if (case %in% c(1, 2)) { # terminate single arm A or B
-            fprob_2 <- c(100, sapply(2:(narm_22 - 1), function(r) mean(pE_post[r, ] > pE_post[narm_22, ])), 100)
-          } else {
-            fprob_2 <- c(100, 100)
-          }
+        pE_prior <- expit(MtxProd(X.mtx.all[[j_ast1_tmp[i]]], Beta_prior))
+        logpE_prior0 <- log(pE_prior)
+        logpE_prior1 <- log(1 - pE_prior)
+        X.mtx <- X.mtx.all[[j_ast1_tmp[i]]]
+        pE_post <- .get_post(
+          Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
+          logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
+          data_Y = data_Y[i, ], data_N = data_N[i, ]
+        )
+        # futility stopping prob
+        fprob_1 <- c(100, sapply(2:narm_22, function(r) mean(pE_post[r, ] > pE_post[1, ])))
+        if (case %in% c(1, 2)) { # terminate single arm A or B
+          fprob_2 <- c(100, sapply(2:(narm_22 - 1), function(r) mean(pE_post[r, ] > pE_post[narm_22, ])), 100)
+        } else {
+          fprob_2 <- c(100, 100)
         }
-        return(c(fprob_1, fprob_2))
-      })
-      fprob_1 <- fprob_all[1:narm_22, ]
-      fprob_2 <- fprob_all[-(1:narm_22), ]
-
-      proc_22[which(proc_22 != 0 & pbeta(tox.upper, (0.1 + Yt_pre + Yt_22), (0.1 + Nt_pre + currn_22 - Yt_pre - Yt_22)) < C_t)] <- 0
-      proc_22[which(proc_22 != 0 & fprob_1 < C.f1.trans)] <- 0
-      proc_22[which(proc_22 != 0 & fprob_2 < C.f2.trans)] <- 0
-    } else if (t == T_22) {
-      BCI <- pbsapply(1:sn_22, function(i) {
-        if (proc_22[narm_22, i] == 0) {
-          BCI <- rep(-2, (narm_22 - 1))
-        } else {
-          pE_prior <- pE_prior_list[[j_ast1_tmp[i]]]
-          logpE_prior0 <- logpE_prior0_list[[j_ast1_tmp[i]]]
-          logpE_prior1 <- logpE_prior1_list[[j_ast1_tmp[i]]]
-          X.mtx <- X.mtx.all[[j_ast1_tmp[i]]]
-          pE_post <- .get_post(
-            Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
-            logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
-            data_Y = data_Y[i, ], data_N = data_N[i, ]
-          )
+        if (t == T_22) {
           BCI <- sapply(1:(narm_22 - 1), function(r) mean(pE_post[narm_22, ] > pE_post[r, ]))
         }
-      })
+      }
+      output <- ifelse(t == T_22, c(fprob_1, fprob_2, BCI), c(fprob_1, fprob_2))
+      if(t == T_22) {
+        return(c(fprob_1, fprob_2, BCI))
+      } else {
+        return(c(fprob_1, fprob_2))
+      }
+    })
+    fprob_1 <- fprob_all[1:narm_22, ]
+    fprob_2 <- fprob_all[(narm_22 + 1):(2*narm_22), ]
+    if (t == T_22) BCI <- fprob_all[-(1:(2*narm_22)), ]
+
+    proc_22[which(proc_22 != 0 & pbeta(tox.upper, (0.1 + Yt_pre + Yt_22), (0.1 + Nt_pre + currn_22 - Yt_pre - Yt_22)) < C_t)] <- 0
+    proc_22[which(proc_22 != 0 & fprob_1 < C.f1.trans)] <- 0
+    proc_22[which(proc_22 != 0 & fprob_2 < C.f2.trans)] <- 0
+    if (t == T_22) {
+      BCI[, which(proc_22[narm_22, ] == 0)] <- -2
     }
   }
   cli_alert_info("Stage 2: done")
@@ -398,7 +386,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
 
   sel.opt.g <- sapply(1:cont.simu, function(r) j_ast1_tmp[r] %in% j_opt) * 1
   sel.opt.g <- which(sel.opt.g != 0)
-  for (jj in which(colMeans(BCI) == -2)) {
+  for (jj in which(currn_22[nrow(currn_22), ] < n.stage2)) {
     currn_22[, jj] <- currn_22[nrow(currn_22), jj]
   }
   currn_22 <- cbind(currn_22, matrix(0, nrow = nrow(currn_22), ncol = (n.simu - cont.simu)))

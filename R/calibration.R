@@ -219,8 +219,8 @@ COCA.calibration <- function(
 }
 
 #' @keywords internal
-.get_Beta_prior <- function(n.sample = 1e6, control = TRUE, type = 2) {
-  set.seed(0)
+.get_Beta_prior <- function(n.sample = 1e6, control = TRUE, type = 2, seed = 0) {
+  set.seed(seed)
   # type = 1 for vague prior on beta3; type = 2 for spike and slab prior
   if (control) {
     beta0 <- rnorm(n.sample, 0, sqrt(10))
