@@ -121,7 +121,7 @@ The `COCA.calibration` function will output the corresponding power and design c
 
 ```{r, echo = TRUE, eval = FALSE}
 power.target <- 0.90
-n.stage2 <- 20
+n.stage2 <- 30
 search.step <- 2
 output <- list(Power = 0, c0 = -1)
 while(output$Power < power.target | output$c0 == -1){
