@@ -2,7 +2,7 @@
 % Please edit documentation in R/calibration.R
 \name{COCA.calibration}
 \alias{COCA.calibration}
-\title{COCA Calibration}
+\title{Calibrate COCA parameters}
 \usage{
 COCA.calibration(
   case,
@@ -73,7 +73,7 @@ All dosage values can be on any scale but must use the same scale across \code{d
 Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
 }
 \description{
-COCA Calibration
+Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power for a given configuration.
 }
 \examples{
 

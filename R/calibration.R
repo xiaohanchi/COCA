@@ -1,4 +1,6 @@
-#' COCA Calibration
+#' Calibrate COCA parameters
+#'
+#' Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power for a given configuration.
 #'
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
 #' @param n.comb.dose Number of combination arms in stage 1

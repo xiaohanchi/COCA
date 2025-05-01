@@ -2,7 +2,7 @@
 % Please edit documentation in R/run_coca.R
 \name{COCA.getOC}
 \alias{COCA.getOC}
-\title{COCA Simulation}
+\title{Run the COCA Design}
 \usage{
 COCA.getOC(
   case = 1,
@@ -93,6 +93,9 @@ Returns the operating characteristics of stage 1 (selection and expected sample 
 }
 \description{
 This function uses \code{activeSet()} from the \code{isotone} package to perform isotonic regression.
+}
+\details{
+Run the COCA design and get its operating characteristics.
 }
 \examples{
 # \code{n.simu = 20} is used for illustration purposes. For more accurate results,

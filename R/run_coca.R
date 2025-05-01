@@ -1,4 +1,6 @@
-#' COCA Simulation
+#' Run the COCA Design
+#'
+#' Run the COCA design and get its operating characteristics.
 #'
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
 #' @param n.stage1 Sample size for stage 1

@@ -269,10 +269,17 @@ COCA.getOC(
     #> Power (%)    GP (%)    SR (%)   OSR (%)        EN 
     #>     77.72     73.12     70.75     68.04    105.10
 
-##### 4. Comparison with Dunnett’s test
+##### \* Comparison with Dunnett’s test
 
-This package also provides the function `dunnett.comb` to implement the
-Dunnett’s test approach described in Web Appendix C of \[1\].
+This package also provides the code to reproduce the Dunnett’s test
+approach described in Web Appendix C of \[1\]. To access it, run:
+
+``` r
+open_example("dunnett.R")
+```
+
+Detailed instructions for reproducing the results in paper \[1\] are
+provided at the end of the script.
 
 ### Reference
 

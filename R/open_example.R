@@ -7,11 +7,8 @@
 #' @export
 #'
 #' @examples \donttest{
-#' open_example("MTD-Ind.R")
+#' open_example("alt_designs.R")
 #'
-#' open_example("OBD-Ind.R")
-#'
-#' open_example("OBD-Pool.R")
 #' }
 #'
 open_example <- function(name = "example_code.R") {
