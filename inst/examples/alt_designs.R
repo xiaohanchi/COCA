@@ -209,21 +209,96 @@ mtdind.getOC <- function(case = 1, n.s1 = 24, n.s2 = 28, scenario,
   return(output)
 }
 
+# summarize results
+get.results <- function(output, case, scenario, u.score, period.eff = 0,
+                        upper_t, lower_e, Ce, c0,
+                        sn_all = 5000){
+  rho <- 0.2
+  fda_sc <- switch(case, 1, 3, 2)
+  Ce <- c(Ce, (Ce * c0), (Ce * c0))
+
+  BCI <- output$BCI
+  if (is.null(dim(BCI)[2])) {
+    BCI <- matrix(BCI, nrow = 1)
+  }
+  sn <- dim(BCI)[2]
+  j_ast1 <- j_ast1_tmp <- rep(1, sn)
+  idx <- switch(scenario, 21, 1, 4, 6, 10, 14, 16, 17, 18, 20)
+  tox.prob <- Tox_prob[, idx]
+  eff.prob <- Eff_prob[, idx] + period.eff
+  multi.prob <- sapply(1:length(tox.prob), function(r) {
+    solve.level(rho, eff.prob[r], tox.prob[r])
+  })
+  true.utility <- u.score %*% multi.prob
+  j_opt <- which(
+    true.utility == max(
+      true.utility[which(tox.prob <= upper_t &
+                           eff.prob >= lower_e)]
+    )
+  )
+  sel.opt.g <- sapply(1:sn, function(r) j_ast1_tmp[r] %in% j_opt) * 1
+  sel.opt.g <- which(sel.opt.g != 0) # correct groups
+  currn_22 <- output$currn_22
+  for (jj in which(currn_22[nrow(currn_22), ] < max(currn_22))) {
+    # comb early stopping
+    currn_22[, jj] <- currn_22[nrow(currn_22), jj]
+  }
+  currn_22 <- cbind(currn_22, matrix(0, nrow = nrow(currn_22), ncol = (sn_all - sn)))
+  avg.n <- mean(colSums(currn_22))
+  power <- length(which(BCI[1, ] > Ce[1])) / sn # power
+  GP <- length(which(BCI[1, sel.opt.g] > Ce[1])) / sn
+
+  # effective power only
+  SR <- switch(fda_sc,
+               (length(which(BCI[1, ] > Ce[1] & BCI[2, ] > Ce[2] & BCI[3, ] > Ce[3])) / sn),
+               (length(which(BCI[1, ] > Ce[1])) / sn),
+               (length(which(BCI[1, ] > Ce[1] & BCI[2, ] > Ce[2])) / sn)
+  )
+
+  OSR <- switch(fda_sc,
+                (length(which(BCI[1, sel.opt.g] > Ce[1] & BCI[2, sel.opt.g] > Ce[2] & BCI[3, sel.opt.g] > Ce[3])) / sn),
+                (length(which(BCI[1, sel.opt.g] > Ce[1])) / sn),
+                (length(which(BCI[1, sel.opt.g] > Ce[1] & BCI[2, sel.opt.g] > Ce[2])) / sn)
+  )
+
+  results <- data.frame(
+    case, scenario, period.eff, avg.n, (power * 100), (GP * 100), (SR * 100), (OSR * 100)
+  )
+  colnames(results) <- c("Case", "Scenario", "Period Effect", "EN", "Power (%)", "Generalized Power (%)",  "SR (%)", "OSR (%)")
+
+  return(results)
+}
+
 ##################################### RUN models #######################################
 scenario.path <- system.file("examples", "scenarios.R", package = "COCA")
 source(scenario.path)
 
+
+### MTD-Ind ===================================================================================
 mtdind.output <- mtdind.getOC(
   case = 1, n.s1 = 24, n.s2 = 40, scenario = 1,
   u_score = c(0, 60, 40, 100), upper_t = 0.35, lower_e = 0.25,
   seed = 1234, sn = 5000
 )
 
-# Note: this code may take ~1-2 hours to run
-# For illustration, we have provided an example output .Rdata file in `/inst/example_Rdata`
-# To get the results, assume we have successfully run the above code, and the function returns:
+# Note: This code may take approximately 1–2 hours to run.
+# For illustration, we provide a pre-generated output file located in `/inst/example_Rdata`.
+# Assuming the code above has been successfully run, the function would return:
+# (you can load the saved output as follows)
 
 load(system.file("example_Rdata", "output_mtdind.Rdata", package = "COCA"))
+output_mtdind <- output
+
+# This creates an object named `output_mtdind`, which contains the results returned by the function `mtdind.getOC`. To get the results for Scenario 1 under Case 1 of the MTD-Ind design, run:
+# (The corresponding Ce and c0 values can be found in Table 1 of the paper)
+
+get.results(
+  output = output_mtdind, case = 1, scenario = 1, u.score = c(0, 60, 40, 100),
+  period.eff = 0, upper_t = 0.35, lower_e = 0.25, Ce = 0.9049, c0 = 0.81, sn_all = 5000
+  )
+
+# To reproduce other scenarios and cases from the paper, run the above functions with `case` set to 1, 2, or 3, and `scenario` set to 1 through 10.
 
 
+### OBD-Ind ===================================================================================
 
