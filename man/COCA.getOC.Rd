@@ -10,6 +10,8 @@ COCA.getOC(
   n.stage2,
   Ce,
   c0,
+  nlook.stage1 = 2,
+  nlook.stage2 = 2,
   dosage.ctrl = c(A = 0, B = 0),
   dosage.singleA = 0,
   dosage.singleB = 0,
@@ -27,6 +29,7 @@ COCA.getOC(
   tox.upper,
   eff.lower,
   Cs = 0.85,
+  Ct = 0.9,
   C.f1 = 0.9,
   C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100),
@@ -44,6 +47,10 @@ COCA.getOC(
 \item{n.stage2}{Sample size for stage 2}
 
 \item{Ce, c0}{Design cutoffs, obtained using the \code{COCA.calibration} function.}
+
+\item{nlook.stage1}{The total number of planned analyses in stage 1, including all interim analyses and the final analysis (e.g., \code{nlook.stage1 = 2} for one interim and one final analysis in stage 2).}
+
+\item{nlook.stage2}{The total number of planned analyses in stage 2, including all interim analyses and the final analysis (e.g., \code{nlook.stage2 = 2} for one interim and one final analysis in stage 2).}
 
 \item{dosage.ctrl}{Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}.If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.}
 
@@ -72,7 +79,7 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{eff.lower}{Lowest acceptable efficacy rate (\eqn{\phi_{E}})}
 
-\item{Cs}{Probability cutoff in stage 1}
+\item{Cs, Ct}{Probability cutoffs in stage 1}
 
 \item{C.f1, C.f2}{Probability cutoffs in stage 2}
 
@@ -111,7 +118,7 @@ COCA.getOC(
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }
@@ -126,7 +133,7 @@ COCA.getOC(
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }
@@ -141,7 +148,7 @@ COCA.getOC(
   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }
@@ -156,7 +163,7 @@ COCA.getOC(
   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 )
 }

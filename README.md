@@ -71,8 +71,8 @@ COCA.getOC(
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-  utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000, seed = 1254
+  tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
+  utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, seed = 1254, n.simu = 5000
 )
 ```
 
@@ -220,31 +220,31 @@ COCA.getOC(
   tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
   tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
   tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
-  tox.upper = 0.30, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
+  tox.upper = 0.30, eff.lower = 0.07, Cs = 0.80, Ct = 0.9, C.f1 = 0.90, C.f2 = 0.90, 
   utility.score = c(0, 40, 60, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
   )
 ```
 
     #> $stage1_output
     #> termination (%)       dose1 (%)       dose2 (%)   selection (%)              EN 
-    #>            1.56           83.34           15.10           83.34           43.78 
+    #>            1.56           83.34           15.10           83.34           43.80 
     #> 
     #> $stage2_output
     #> Power (%)    GP (%)    SR (%)   OSR (%)        EN 
-    #>     77.41     73.81     69.16     67.43    104.30
+    #>     76.94     73.47     68.24     66.72    104.20
 
 In stage 1, we have an 83.34% chance of selecting the correct
-combination dose as the OBD, with an average sample size of 43.78
-patients. In stage 2, the power of our design is 77.41%, the GP is
-73.81%, the SR is 69.16%, and the OSR is 67.43%, with an average sample
-size of 104.30 patients. In total, the trial requires an average of
-148.08 patients (43.78 in stage 1 and 104.30 in stage 2). For
-illustration, here we set `prior.sample = 1e5` (i.e., $10^5$ prior draws
-per simulation) to balance computational speed and result accuracy. This
-code may take approximately 10–20 minutes to run, depending on your
-system specifications. To reproduce the results in our paper, please use
+combination dose as the OBD, with an average sample size of 43.80
+patients. In stage 2, the power of our design is 76.94%, the GP is
+73.47%, the SR is 68.24%, and the OSR is 66.72%, with an average sample
+size of 104.2 patients. In total, the trial requires an average of 148.0
+patients (43.8 in stage 1 and 104.2 in stage 2). For illustration, here
+we set `prior.sample = 1e5` (i.e., $10^5$ prior draws per simulation) to
+balance computational speed and result accuracy. This code may take
+approximately 10–20 minutes to run, depending on your system
+specifications. **To reproduce the results in our paper, please use
 `prior.sample = 1e6`, though this will require additional computation
-time.
+time.**
 
 If the ORRs of the combinations in stage 1 are 5% higher than the stage
 2 rates (i.e., period effect = 0.05), run:
@@ -258,8 +258,8 @@ COCA.getOC(
   tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
   tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
   tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
-  tox.upper = 0.30, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
-  utility.score = c(0, 40, 60, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
+  tox.upper = 0.30, eff.lower = 0.07, Cs = 0.80, Ct = 0.9, C.f1 = 0.90, C.f2 = 0.90, 
+  utility.score = c(0, 40, 60, 100), rho = 0.2, prior.sample = 1e5, seed = 1354, n.simu = 5000
   )
 ```
 

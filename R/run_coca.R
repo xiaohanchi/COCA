@@ -6,6 +6,8 @@
 #' @param n.stage1 Sample size for stage 1
 #' @param n.stage2 Sample size for stage 2
 #' @param Ce,c0 Design cutoffs, obtained using the \code{COCA.calibration} function.
+#' @param nlook.stage1 The total number of planned analyses in stage 1, including all interim analyses and the final analysis (e.g., \code{nlook.stage1 = 2} for one interim and one final analysis in stage 2).
+#' @param nlook.stage2 The total number of planned analyses in stage 2, including all interim analyses and the final analysis (e.g., \code{nlook.stage2 = 2} for one interim and one final analysis in stage 2).
 #' @param dosage.ctrl Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}.If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.
 #' @param dosage.singleA Dosage level of drug A in the single arm for stage 2.
 #' @param dosage.singleB Dosage level of drug B in the single arm for stage 2.
@@ -21,7 +23,7 @@
 #' @param tox.isomat Matrix with 2 columns that contains isotonicity conditions for the toxicity order among the J combination doses. The format should follow the structure expected by the `activeSet()` function in the `isotone` package. For details, refer to the [isotone package documentation](https://cran.r-project.org/web/packages/isotone/index.html).
 #' @param tox.upper Highest acceptable toxicity rate (\eqn{\phi_{T}})
 #' @param eff.lower Lowest acceptable efficacy rate (\eqn{\phi_{E}})
-#' @param Cs Probability cutoff in stage 1
+#' @param Cs,Ct Probability cutoffs in stage 1
 #' @param C.f1,C.f2 Probability cutoffs in stage 2
 #' @param utility.score Vector of utility score: \code{c(b1, b2, b3, b4)} represents the utility for (toxicity, no efficacy), (no toxicity, no efficacy), (toxicity, efficacy), and (no toxicity, efficacy), respectively.
 #' @param rho Correlation between toxicity and efficacy
@@ -55,7 +57,7 @@
 #'   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
@@ -70,7 +72,7 @@
 #'   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.45, 0.45, 0.45), eff.AB.s2 = c(0.25, 0.25, 0.25),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
@@ -85,7 +87,7 @@
 #'   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.55, 0.55, 0.55), eff.AB.s2 = c(0.55, 0.55, 0.55),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
@@ -100,16 +102,16 @@
 #'   eff.A = 0.35, eff.B = 0.35, tox.AB = c(0.30, 0.30, 0.15),
 #'   eff.AB.s1 = c(0.75, 0.75, 0.75), eff.AB.s2 = c(0.55, 0.55, 0.55),
 #'   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
-#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+#'   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
-COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
+COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0, nlook.stage1 = 2, nlook.stage2 = 2,
                        dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 0, dosage.singleB = 0,
                        dosage.comb = list(A = c(), B = c()),
                        tox.SOC, eff.SOC, tox.A = 0, tox.B = 0, eff.A = 0, eff.B = 0,
                        tox.AB = c(), eff.AB.s1 = c(), eff.AB.s2 = c(), tox.isomat,
-                       tox.upper, eff.lower, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
+                       tox.upper, eff.lower, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
                        utility.score = c(0, 60, 40, 100), rho = 0.2,
                        prior.sample = 1e5, seed = 123, n.simu = 5000) {
   # Check input
@@ -137,6 +139,21 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     stop("'n.stage2' must be a positive integer.")
   }
 
+  if (!is.numeric(nlook.stage1) || length(nlook.stage1) != 1 || nlook.stage1 <= 0 || nlook.stage1 != as.integer(nlook.stage1)) {
+    stop("'nlook.stage1' must be a positive integer.")
+  }
+  if (!is.numeric(nlook.stage2) || length(nlook.stage2) != 1 || nlook.stage2 <= 0 || nlook.stage2 != as.integer(nlook.stage2)) {
+    stop("'nlook.stage2' must be a positive integer.")
+  }
+
+  if (n.stage1 %% nlook.stage1 != 0) {
+    stop("The stage 1 total sample size ('n.stage1') must be an integer multiple of the number of planned analyses ('nlook.stage1') to allow evenly spaced interim analyses, each conducted after every n.stage1 / nlook.stage1 patients.")
+  }
+
+  if (n.stage2 %% nlook.stage2 != 0) {
+    stop("The stage 2 total sample size ('n.stage2') must be an integer multiple of the number of planned analyses ('nlook.stage2') to allow evenly spaced interim analyses, each conducted after every n.stage2 / nlook.stage2 patients.")
+  }
+
   if (dosage.ctrl["A"] * dosage.ctrl["B"] != 0) {
     stop("dosage.ctrl: Both dosages for A and B in the control arm cannot be non-zero; at least one of them must be zero.")
   }
@@ -144,7 +161,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     stop("All dosages must be greater than 0.")
   }
 
-  for (param_name in c("tox.SOC", "eff.SOC", "tox.A", "tox.B", "eff.A", "eff.B", "tox.upper", "eff.lower", "Ce", "Cs", "C.f1", "C.f2")) {
+  for (param_name in c("tox.SOC", "eff.SOC", "tox.A", "tox.B", "eff.A", "eff.B", "tox.upper", "eff.lower", "Ce", "Cs", "Ct", "C.f1", "C.f2")) {
     param_value <- get(param_name)
     if (!is.numeric(param_value) || param_value < 0 || param_value > 1) {
       stop(sprintf("'%s' must be between 0 and 1.", param_name))
@@ -172,7 +189,8 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   Ce <- c(Ce, c0 * Ce, c0 * Ce)
   n.dose.AB <- length(tox.AB)
   Nmax_p2 <- c(n.stage1, n.stage2) # stage 1 & stage 2
-  T_21 <- 2
+  T_21 <- nlook.stage1
+  T_22 <- nlook.stage2
   if (nrow(tox.isomat) == 1) {
     A1 <- rbind(tox.isomat, tox.isomat)
   } else {
@@ -180,13 +198,8 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   }
   A2 <- A1[, c(2, 1)]
   C_s1 <- C_s2 <- Cs
-  C.f1.trans <- 1 - C.f1
-  C.f2.trans <- 1 - C.f2
-
 
   a <- rep(0.05, 4) # hyperparameters in dirichlet
-  T_22 <- 2
-  C_t <- 0.10
 
   narm_22 <- switch(case,
     4,
@@ -212,7 +225,6 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
   dose_std_ctrl <- dose_std[, 1]
   dose_std_single <- dose_std[, 2]
   dose_std_comb <- dose_std[, -(1:2)]
-
 
   ### simulation settings
   Tox_prob <- tox.AB
@@ -353,9 +365,9 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0,
     fprob_2 <- fprob_all[(narm_22 + 1):(2*narm_22), ]
     if (t == T_22) BCI <- fprob_all[-(1:(2*narm_22)), ]
 
-    proc_22[which(proc_22 != 0 & pbeta(tox.upper, (0.1 + Yt_pre + Yt_22), (0.1 + Nt_pre + currn_22 - Yt_pre - Yt_22)) < C_t)] <- 0
-    proc_22[which(proc_22 != 0 & fprob_1 < C.f1.trans)] <- 0
-    proc_22[which(proc_22 != 0 & fprob_2 < C.f2.trans)] <- 0
+    proc_22[which(proc_22 != 0 & pbeta(tox.upper, (0.1 + Yt_pre + Yt_22), (0.1 + Nt_pre + currn_22 - Yt_pre - Yt_22)) < (1 - Ct))] <- 0
+    proc_22[which(proc_22 != 0 & fprob_1 < (1 - C.f1))] <- 0
+    proc_22[which(proc_22 != 0 & fprob_2 < (1 - C.f2))] <- 0
     if (t == T_22) {
       BCI[, which(proc_22[narm_22, ] == 0)] <- -2
     }
