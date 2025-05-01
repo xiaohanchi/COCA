@@ -80,13 +80,11 @@ COCA.getOC(
 
 -   Again, `n.simu` is set to 100 for illustration. For more accurate simulation, consider using a larger value, such as 10000.
 
-### Competing Approaches
+##### \* Competing Approaches
 
-We provide R scripts that implement the competing approaches mentioned in the paper<sup>[1]</sup>. To access them, use the following R code to open the files:
+We provide R scripts that implement the competing approaches mentioned in the paper<sup>[1]</sup>. To access them, use the following R code to open the file:
 ```r
-open_example("MTD-Ind.R")
-open_example("OBD-Ind.R")
-open_example("OBD-Pool.R")
+open_example("alt_designs.R")
 ```
 
 
