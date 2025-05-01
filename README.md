@@ -51,11 +51,10 @@ COCA.calibration(
 )
 ```
 
-- `n.simu` is set to 100 for illustration. For more accurate
-  calibration, consider using a larger value, such as 10000, though this
-  may require additional computation time.
-- If the power does not reach the target, increase `n.stage2` and repeat
-  the process.
+`n.simu` is set to 100 for illustration. For more accurate calibration,
+consider using a larger value, such as 10000, though this may require
+additional computation time. If the power does not reach the target,
+increase `n.stage2` and repeat the process.
 
 Once the optimal `n.stage2` is found, run simulations to get the
 operating characteristics of the COCA design with the calibrated
@@ -76,8 +75,8 @@ COCA.getOC(
 )
 ```
 
-- Again, `n.simu` is set to 100 for illustration. For more accurate
-  simulation, consider using a larger value, such as 10000.
+Again, `n.simu` is set to 100 for illustration. For more accurate
+simulation, consider using a larger value, such as 10000.
 
 ##### \* Competing Approaches
 
