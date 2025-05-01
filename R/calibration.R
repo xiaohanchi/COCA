@@ -22,6 +22,7 @@
 #' @param alpha.max Maximum type I error level (\eqn{\alpha_{\max}}) under non-zero period effect
 #' @param fsr.level False success rate level (\eqn{\gamma_0}) under no period effect assumption
 #' @param tsr.level Target true success rate (\eqn{\zeta_0}) under no period effect assumption
+#' @param prior.sample Number of prior draws in each simulation
 #' @param seed Random seed
 #' @param n.simu Number of simulation replicates
 #'
@@ -38,7 +39,7 @@
 #'   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
 #'   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
 #'   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-#'   n.simu = 100
+#'   prior.sample = 1e4, seed = 123, n.simu = 1000
 #' )
 #' }
 #'
@@ -53,7 +54,7 @@
 #'     eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
 #'     eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
 #'     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-#'     n.simu = 100
+#'     prior.sample = 1e4, seed = 123, n.simu = 1000
 #'   )
 #'   if (i == 1) {
 #'     output <- output.tmp
@@ -78,7 +79,7 @@ COCA.calibration <- function(
     eff.null, eff.alt.SOC, eff.alt.A = 0,
     eff.alt.B = 0, eff.alt.AB, period.effect = c(0.1, 0.2, 0.3),
     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-    seed = 123, n.simu = 20) {
+    prior.sample = 1e6, seed = 123, n.simu = 1e4) {
   # Check input
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
   if (case == 1 & (dosage.singleA == 0 | dosage.singleB == 0)) {
@@ -152,7 +153,7 @@ COCA.calibration <- function(
     dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA,
     dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
     eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
-    batch.idx = seed, batch.sn = n.simu
+    prior.sample = prior.sample, batch.idx = seed, batch.sn = n.simu
   )
   cli_alert_info("Null Scneario: done")
 
@@ -162,7 +163,7 @@ COCA.calibration <- function(
     dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA,
     dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
     eff.ctrl = eff.alt.SOC, eff.A = eff.alt.A, eff.B = eff.alt.B, eff.AB = eff.alt.AB,
-    batch.idx = seed, batch.sn = n.simu
+    prior.sample = prior.sample, batch.idx = seed, batch.sn = n.simu
   )
   cli_alert_info("Alternative Scneario: done")
 
@@ -177,7 +178,7 @@ COCA.calibration <- function(
       dosage.singleB = dosage.singleB, dosage.comb = dosage.comb,
       eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
       period_eff = period.effect[pp],
-      batch.idx = seed, batch.sn = n.simu
+      prior.sample = prior.sample, batch.idx = seed, batch.sn = n.simu
     )
     Ce1_p[pp] <- round(quantile(BCI_period[[pp]][1, ], (1 - alpha.max)), digits = 4)
   }
@@ -309,7 +310,7 @@ COCA.calibration <- function(
 run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
                       dosage.ctrl, dosage.singleA = 0, dosage.singleB = 0, dosage.comb,
                       eff.ctrl, eff.A, eff.B, eff.AB, period_eff = 0,
-                      batch.idx, batch.sn = 100) {
+                      prior.sample, batch.idx, batch.sn = 100) {
   set.seed(1233 + 10 * batch.idx + 100 * period_eff)
 
   sn_s1 <- batch.sn
@@ -371,7 +372,7 @@ run.whole <- function(fda.case, n.comb.dose, n.stage1, n.stage2,
   X.mtx.all <- lapply(1:ndose, function(r) {
     cbind(1, X1[, r], X2[, r], (X1[, r] * X2[, r]), (X1[, r] * X2[, r] * period))
   })
-  Beta_prior <- .get_Beta_prior(n.sample = 1e6, control = prior.control, type = 2)
+  Beta_prior <- .get_Beta_prior(n.sample = prior.sample, control = prior.control, type = 2)
   pE_prior_list <- lapply(1:ndose, function(r) {
     expit(MtxProd(X.mtx.all[[r]], Beta_prior))
   })

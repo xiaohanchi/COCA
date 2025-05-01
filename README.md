@@ -47,14 +47,15 @@ COCA.calibration(
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35, 
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3), 
-  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80, n.simu = 100
+  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80, 
+  prior.sample = 1e4, seed = 123, n.simu = 1000
 )
 ```
 
-`n.simu` is set to 100 for illustration. For more accurate calibration,
-consider using a larger value, such as 10000, though this may require
-additional computation time. If the power does not reach the target,
-increase `n.stage2` and repeat the process.
+For more accurate calibration, consider increasing `prior.sample` to
+$10^6$ and setting `n.simu` to $10^4$, though this may require
+additional computation time. If the power or success rate do not reach
+the target, increase `n.stage2` and repeat the process.
 
 Once the optimal `n.stage2` is found, run simulations to get the
 operating characteristics of the COCA design with the calibrated
@@ -63,20 +64,20 @@ configurations:
 ``` r
 # E.g., scenario 1 (period effect = 0)
 COCA.getOC(
-  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.8983, c0 = 0.7, 
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-  tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15, 
-  eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15), 
-  eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25), 
+  tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
+  eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
+  eff.AB.s1 = c(0.25, 0.25, 0.25), eff.AB.s2 = c(0.25, 0.25, 0.25),
   tox.isomat = matrix(c(2, 1, 3, 1), byrow = TRUE, nrow = 2),
   tox.upper = 0.35, eff.lower = 0.25, Cs = 0.85, C.f1 = 0.9, C.f2 = 0.9,
-  utility.score = c(0, 60, 40, 100), rho = 0.2, n.simu = 20
+  utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000, seed = 1254
 )
 ```
 
-Again, `n.simu` is set to 100 for illustration. For more accurate
-simulation, consider using a larger value, such as 10000.
+`prior.sample` is set to $10^5$ for illustration. To reproduce the
+results in our paper, please use `prior.sample = 1e6`.
 
 ##### \* Competing Approaches
 
@@ -153,7 +154,7 @@ while(output$Power < power.target | output$c0 == -1){
     dosage.singleB = dosage.singleB,  dosage.comb = dosage.comb,
     eff.null = 0.07, eff.alt.SOC = 0.07, eff.alt.B = 0.12, eff.alt.AB = 0.25, 
     period.effect = seq(0, 0.1, 0.02), alpha.level = 0.10, alpha.max = 0.20, 
-    fsr.level = 0.05, tsr.level = 0.80, n.simu = 10000
+    fsr.level = 0.05, tsr.level = 0.80, prior.sample = 1e6, seed = 123, n.simu = 1e4
   )
   n.stage2 <- n.stage2 + search.step
 }
@@ -169,9 +170,10 @@ output
 This code may take a while to run… (Note: In my own implementation, I
 used high-performance computing clusters and parallel computing to
 accelerate the process.) For illustration, consider using a smaller
-number of replicates (e.g., `n.simu = 100`). Once completed, we obtained
-the optimal stage 2 sample size of 38, along with design cutoffs
-$C_{e1}=0.7710$ and $c_0=0.84$, as reported in our paper.
+number of prior draws (e.g., `prior.sample = 1e4`) and simulation
+replicates (e.g., `n.simu = 1000`) to reduce runtime. Once completed, we
+obtained the optimal stage 2 sample size of 38, along with design
+cutoffs $C_{e1}=0.7710$ and $c_0=0.84$, as reported in our paper.
 
 ##### 3. Run COCA Design
 
@@ -240,7 +242,7 @@ size of 104.30 patients. In total, the trial requires an average of
 illustration, here we set `prior.sample = 1e5` (i.e., $10^5$ prior draws
 per simulation) to balance computational speed and result accuracy. This
 code may take approximately 10–20 minutes to run, depending on your
-system specifications. To reproduce the results in \[1\], please use
+system specifications. To reproduce the results in our paper, please use
 `prior.sample = 1e6`, though this will require additional computation
 time.
 

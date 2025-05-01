@@ -31,9 +31,9 @@ COCA.getOC(
   C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100),
   rho = 0.2,
-  n.simu = 10,
-  prior.sample,
-  seed = 123
+  prior.sample = 1e+05,
+  seed = 123,
+  n.simu = 5000
 )
 }
 \arguments{
@@ -80,11 +80,11 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{rho}{Correlation between toxicity and efficacy}
 
-\item{n.simu}{Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.}
-
 \item{prior.sample}{Number of prior draws in each simulation}
 
 \item{seed}{Random seed}
+
+\item{n.simu}{Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.}
 
 \item{period.effect}{Period effect}
 }

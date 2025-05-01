@@ -22,8 +22,9 @@ COCA.calibration(
   alpha.max = 0.2,
   fsr.level = 0.05,
   tsr.level = 0.8,
+  prior.sample = 1e+06,
   seed = 123,
-  n.simu = 20
+  n.simu = 10000
 )
 }
 \arguments{
@@ -63,6 +64,8 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{tsr.level}{Target true success rate (\eqn{\zeta_0}) under no period effect assumption}
 
+\item{prior.sample}{Number of prior draws in each simulation}
+
 \item{seed}{Random seed}
 
 \item{n.simu}{Number of simulation replicates}
@@ -86,7 +89,7 @@ COCA.calibration(
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-  n.simu = 100
+  prior.sample = 1e4, seed = 123, n.simu = 1000
 )
 }
 
@@ -101,7 +104,7 @@ for (i in seq_along(n.stage2)) {
     eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
     eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-    n.simu = 100
+    prior.sample = 1e4, seed = 123, n.simu = 1000
   )
   if (i == 1) {
     output <- output.tmp
