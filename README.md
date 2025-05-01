@@ -79,6 +79,8 @@ COCA.getOC(
 - Again, `n.simu` is set to 100 for illustration. For more accurate
   simulation, consider using a larger value, such as 10000.
 
+### Competing Approaches
+
 ### Examples: Redesigning the NCT02519348 Trial
 
 This example provides a step-by-step tutorial on redesigning the
@@ -205,27 +207,31 @@ COCA.getOC(
   tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
   tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
   tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
-  tox.upper = 0.35, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
-  utility.score = c(0, 40, 60, 100), rho = 0.2, n.simu = 5000
+  tox.upper = 0.30, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
+  utility.score = c(0, 40, 60, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
   )
 ```
 
     #> $stage1_output
     #> termination (%)       dose1 (%)       dose2 (%)   selection (%)              EN 
-    #>            1.44           83.54           15.02           83.54           43.79 
+    #>            1.56           83.34           15.10           83.34           43.78 
     #> 
     #> $stage2_output
     #> Power (%)    GP (%)    SR (%)   OSR (%)        EN 
-    #>     78.10     74.19     69.48     67.53    104.60
+    #>     77.41     73.81     69.16     67.43    104.30
 
-In stage 1, we have an 83.54% chance of selecting the correct
-combination dose as the OBD, with an average sample size of 43.79
-patients. In stage 2, the power of our design is 78.10%, the GP is
-74.19%, the SR is 69.48%, and the OSR is 67.53%, with an average sample
-size of 104.60 patients. In total, the trial requires an average of
-148.39 patients (43.79 in stage 1 and 104.60 in stage 2). For
-illustration, consider using a smaller number of replicates (e.g.,
-`n.simu = 100`).
+In stage 1, we have an 83.34% chance of selecting the correct
+combination dose as the OBD, with an average sample size of 43.78
+patients. In stage 2, the power of our design is 77.41%, the GP is
+73.81%, the SR is 69.16%, and the OSR is 67.43%, with an average sample
+size of 104.30 patients. In total, the trial requires an average of
+148.08 patients (43.78 in stage 1 and 104.30 in stage 2). For
+illustration, here we set `prior.sample = 1e5` (i.e., $10^5$ prior draws
+per simulation) to balance computational speed and result accuracy. This
+code may take approximately 10–20 minutes to run, depending on your
+system specifications. To reproduce the results in \[1\], please use
+`prior.sample = 1e6`, though this will require additional computation
+time.
 
 If the ORRs of the combinations in stage 1 are 5% higher than the stage
 2 rates (i.e., period effect = 0.05), run:
@@ -239,18 +245,23 @@ COCA.getOC(
   tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
   tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
   tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
-  tox.upper = 0.35, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
-  utility.score = c(0, 40, 60, 100), rho = 0.2, n.simu = 5000
+  tox.upper = 0.30, eff.lower = 0.07, Cs = 0.80, C.f1 = 0.90, C.f2 = 0.90, 
+  utility.score = c(0, 40, 60, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
   )
 ```
 
     #> $stage1_output
     #> termination (%)       dose1 (%)       dose2 (%)   selection (%)              EN 
-    #>            0.30           81.60           18.10           81.60           45.88 
+    #>            0.36           81.38           18.26           81.38           45.87 
     #> 
     #> $stage2_output
     #> Power (%)    GP (%)    SR (%)   OSR (%)        EN 
-    #>     78.44     73.84     71.78     69.07    105.50
+    #>     77.72     73.12     70.75     68.04    105.10
+
+##### 4. Comparison with Dunnett’s test
+
+This package also provides the function `dunnett.comb` to implement the
+Dunnett’s test approach described in Web Appendix C of \[1\].
 
 ### Reference
 
