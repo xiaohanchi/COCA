@@ -144,7 +144,7 @@ optimal stage 2 sample size, starting from 30, until the target power
 
 ``` r
 power.target <- 0.90
-n.stage2 <- 30
+n.stage2 <- 20
 search.step <- 2
 output <- list(Power = 0, c0 = -1)
 while(output$Power < power.target | output$c0 == -1){
