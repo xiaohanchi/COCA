@@ -81,13 +81,16 @@ COCA.getOC(
 
 ##### \* Competing Approaches
 
-We provide R scripts that implement the competing approaches mentioned
-in the paper<sup>\[1\]</sup>. To access them, use the following R code
-to open the file:
+We provide R code to implement the competing approaches mentioned in the
+paper<sup>\[1\]</sup>. To access it, use the following R code:
 
 ``` r
 open_example("alt_designs.R")
 ```
+
+Detailed instructions for reproducing the results in paper \[1\] are
+provided at the end of the script, along with some example output
+`.Rdata` files in `inst/example_Rdata`.
 
 ### Examples: Redesigning the NCT02519348 Trial
 
