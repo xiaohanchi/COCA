@@ -81,8 +81,9 @@ COCA.getOC(
 
 ##### \* Competing Approaches
 
-We provide R code to implement the competing approaches mentioned in the
-paper<sup>\[1\]</sup>. To access it, use the following R code:
+We provide R code to implement the competing approaches (MTD-Ind,
+OBD-Ind, and OBD-Pool) mentioned in the paper<sup>\[1\]</sup>. To access
+it, use the following R code:
 
 ``` r
 open_example("alt_designs.R")
