@@ -82,7 +82,7 @@ get.post <- function(Beta_prior, X.mtx, pE_prior,
 mtdind.getOC <- function(case = 1, n.s1 = 24, n.s2 = 28, scenario,
                          u_score = c(0, 60, 40, 100), upper_t = 0.35, lower_e = 0.25,
                          C_s1 = 0.85, C_s2 = 0.85, C_t = 0.9, C_f1 = 0.9, C_f2 = 0.9,
-                         prior.type = 2, seed, sn = 5000) {
+                         period_eff = 0, prior.type = 2, seed, sn = 5000) {
   ndose <- 3
   rho <- 0.2
   Nmax_p2 <- c(n.s1, n.s2) # stage 1 & stage 2
@@ -433,6 +433,229 @@ obdind.getOC <- function(case = 1, n.s1 = 24, n.s2 = 28, scenario,
   return(output)
 }
 
+# OBD-Pool main function
+pool.getOC <- function(case = 1, n.s1 = 24, n.s2 = 28, scenario,
+                       u_score = c(0, 60, 40, 100), upper_t = 0.35, lower_e = 0.25,
+                       C_s1 = 0.85, C_s2 = 0.85, C_t = 0.9, C_f1 = 0.9, C_f2 = 0.9,
+                       period_eff = 0, prior.type = 2, seed, sn = 5000) {
+  ndose <- 3
+  rho <- 0.2
+  Nmax_p2 <- c(n.s1, n.s2) # stage 1 & stage 2
+  T_21 <- 2
+  A1 <- matrix(c(2, 1, 3, 1), byrow = T, nrow = 2) # order matrix for pi_tox_hat
+  A2 <- matrix(c(1, 2, 1, 3), byrow = T, nrow = 2) # order matrix for prob
+  a <- rep(0.05, 4) # hyperparameters in dirichlet
+
+  T_22 <- 2
+  Tcontrol <- 0.10
+  Econtrol <- 0.25
+  fda_sc <- switch(case, 1, 3, 2)
+  narm_22 <- switch(fda_sc,
+                    4,
+                    2,
+                    3
+  )
+
+  dosage_level <- matrix(c(300, 200, 0, 300, 200, 0), nrow = 2, byrow = T)
+  row.names(dosage_level) <- c("A", "B")
+  dose_level_std <- t(apply(dosage_level, MARGIN = 1, DoseStandardize))
+  dose_std <- matrix(c(
+    dose_level_std["A", 1], dose_level_std["B", 1],
+    dose_level_std["A", 1], dose_level_std["B", 2],
+    dose_level_std["A", 2], dose_level_std["B", 1]
+  ), ncol = ndose, byrow = F)
+  row.names(dose_std) <- c("A", "B")
+
+  ### simulation settings
+  simu_sc <- switch(scenario, 21, 1, 4, 6, 10, 14, 16, 17, 18, 20)
+  Tox_prob <- Tox_prob[, simu_sc]
+  Eff_prob <- Eff_prob[, simu_sc] + period_eff
+  Tox_prob_A <- Tox_prob_A[, simu_sc]
+  Tox_prob_B <- Tox_prob_B[, simu_sc]
+  Eff_prob_A <- Eff_prob_A[, simu_sc]
+  Eff_prob_B <- Eff_prob_B[, simu_sc]
+
+  ### Stage I
+  multi_prob <- sapply(1:ndose, function(r) solve.level(rho, Eff_prob[r], Tox_prob[r]))
+  true_utility <- u_score %*% multi_prob
+
+  narm_21 <- ndose # #of arms in stage I
+  N_21 <- sapply(1:sn, function(r) rep(Nmax_p2[1], 3)) # 3xsn matrix
+  n_21 <- N_21 / T_21 # sample in each stages
+  tox_21 <- switch(narm_21,
+                   c(Tox_prob, 0, 0),
+                   c(Tox_prob, 0),
+                   Tox_prob
+  )
+  eff_21 <- switch(narm_21,
+                   c(Eff_prob, 0, 0),
+                   c(Eff_prob, 0),
+                   Eff_prob
+  )
+
+  Y_21 <- pi_hat_21 <- pi_hat_21_iso <- array(0, dim = c(narm_21, nrow(multi_prob), sn))
+  piT_hat_21 <- piE_hat_21 <- currn_21 <- matrix(0, nrow = 3, ncol = sn) # 3xsn matrix
+  proc_21 <- matrix(rep(((tox_21 + eff_21) != 0) * 1, sn), nrow = 3) # trial process of stage I
+  for (t in 1:T_21) {
+    set.seed(123 + 10 * t)
+    currn_21 <- currn_21 + n_21 * proc_21 # current sample size
+    temp_Y <- sapply(1:narm_21, function(r) rmultinom(sn, n_21[1, r], multi_prob[, r]))
+    temp_Y <- array(t(temp_Y), dim = dim(Y_21))
+    for (i in 1:nrow(multi_prob)) {
+      temp_Y[, i, ] <- temp_Y[, i, ] * proc_21
+    }
+    Y_21 <- Y_21 + temp_Y
+    for (i in 1:nrow(multi_prob)) {
+      pi_hat_21[, i, ] <- (a[i] + Y_21[, i, ]) / (sum(a) + currn_21)
+    }
+    piT_hat_21 <- pi_hat_21[, 1, ] + pi_hat_21[, 3, ] # tox rate hat
+    w1 <- 1 / apply(piT_hat_21, 1, var)
+    piT_hat_21_iso <- sapply(1:sn, function(r) activeSet(A1, "LS", weights = w1, y = piT_hat_21[, r])$x)
+    piE_hat_21 <- pi_hat_21[, 3, ] + pi_hat_21[, 4, ] # response rate hat
+    rho_hat <- (pi_hat_21[, 2, ] * pi_hat_21[, 3, ] - pi_hat_21[, 1, ] * pi_hat_21[, 4, ]) / sqrt(piE_hat_21 * (1 - piE_hat_21) * piT_hat_21_iso * (1 - piT_hat_21_iso))
+    for (i in 1:ndose) {
+      pi_hat_21_iso[i, , ] <- sapply(1:sn, function(r) solve.level(rho_hat[i, r], piE_hat_21[i, r], piT_hat_21_iso[i, r]))
+    }
+    prt_21 <- pbeta(upper_t, (a[1] + a[3] + Y_21[, 1, ] + Y_21[, 3, ]), (a[2] + a[4] + currn_21 - Y_21[, 1, ] - Y_21[, 3, ]))
+    w2 <- 1 / apply(prt_21, 1, var)
+    prt_21_iso <- sapply(1:sn, function(r) activeSet(A2, "LS", weights = w2, y = prt_21[, r])$x)
+    pre_21 <- pbeta(lower_e, (a[3] + a[4] + Y_21[, 3, ] + Y_21[, 4, ]), (a[1] + a[2] + currn_21 - Y_21[, 3, ] - Y_21[, 4, ]))
+    if (t < T_21) {
+      proc_21[which(proc_21 != 0 & prt_21_iso < 1 - C_s1)] <- 0
+      proc_21[which(proc_21 != 0 & pre_21 > C_s1)] <- 0
+    } else if (t == T_21) {
+      Aset <- which(prt_21_iso * proc_21 > 1 - C_s2 & pre_21 * proc_21 < C_s2)
+      for (i in 1:nrow(multi_prob)) {
+        pi_hat_21_iso[, i, ][-Aset] <- -100
+      }
+      utility <- t(sapply(1:ndose, function(r) u_score %*% pi_hat_21_iso[r, , ]))
+
+      j_ast1 <- apply(utility, 2, which.max) # 1-dimension indicator
+      j_ast1[which(colSums(proc_21) == 0)] <- -1 # early terminated
+      j_ast1[which(apply(utility, 2, max) < 0)] <- -1 # no OBD
+    }
+  }
+
+  ### Stage II
+  Eff_prob <- Eff_prob - period_eff
+
+  Yt_21 <- (Y_21[, 1, ] + Y_21[, 3, ])[, which(j_ast1 > 0)]
+  Ye_21 <- (Y_21[, 3, ] + Y_21[, 4, ])[, which(j_ast1 > 0)]
+  sn_22 <- sum(j_ast1 > 0)
+  N_22 <- sapply(1:sn_22, function(r) rep(Nmax_p2[2], narm_22))
+  n_22 <- N_22 / T_22
+  j_ast1_tmp <- j_ast1[which(j_ast1 > 0)]
+  tox_22_all <- rbind(rep(Tcontrol, sn_22), Tox_prob_A[j_ast1_tmp], Tox_prob_B[j_ast1_tmp], Tox_prob[j_ast1_tmp])
+  tox_22 <- switch(fda_sc,
+                   tox_22_all,
+                   tox_22_all[c(1, 4), ],
+                   tox_22_all[-3, ]
+  )
+  eff_22_all <- rbind(rep(Econtrol, sn_22), Eff_prob_A[j_ast1_tmp], Eff_prob_B[j_ast1_tmp], Eff_prob[j_ast1_tmp])
+  eff_22 <- switch(fda_sc,
+                   eff_22_all,
+                   eff_22_all[c(1, 4), ],
+                   eff_22_all[-3, ]
+  )
+
+  X1_all <- sapply(1:narm_21, function(r) {
+    c(
+      dose_level_std["A", 3], dose_std["A", 1], dose_level_std["A", 3],
+      dose_std["A", r], dose_std["A", ]
+    )
+  })
+  X2_all <- sapply(1:narm_21, function(r) {
+    c(
+      dose_level_std["B", 3], dose_level_std["B", 3], dose_std["B", 1],
+      dose_std["B", r], dose_std["B", ]
+    )
+  })
+  colnames(X1_all) <- colnames(X2_all) <- c("j=1", "j=2", "j=3")
+  X1 <- switch(fda_sc,
+               X1_all,
+               X1_all[c(1, 4, 5, 6, 7), ],
+               X1_all[-3, ]
+  )
+  X2 <- switch(fda_sc,
+               X2_all,
+               X2_all[c(1, 4, 5, 6, 7), ],
+               X2_all[-3, ]
+  )
+
+  Yt_pre <- sapply(1:sn_22, function(r) c(rep(0, (narm_22 - 1)), (Yt_21[j_ast1_tmp[r], r])))
+  Nt_pre <- sapply(1:sn_22, function(r) c(rep(0, (narm_22 - 1)), (currn_21[, which(j_ast1 > 0)][j_ast1_tmp[r], r])))
+
+  BCI <- matrix(NA, nrow = (narm_22 - 1), ncol = sn_22)
+  Yt_22 <- Ye_22 <- matrix(0, nrow = narm_22, ncol = sn_22)
+  proc_22 <- matrix(1, nrow = narm_22, ncol = sn_22) # trial process of stage II
+  currn_22 <- matrix(0, nrow = narm_22, ncol = sn_22)
+  fprob_1 <- fprob_2 <- matrix(NA, nrow = narm_22, ncol = sn_22)
+
+  Beta_prior <- get.Beta.prior(n.sample = 1e6, type = prior.type)
+  Beta_prior <- Beta_prior[!rownames(Beta_prior) %in% c("beta4"), ]
+  X.mtx.all <- lapply(1:narm_21, function(r) {
+    cbind(1, X1[, r], X2[, r], (X1[, r] * X2[, r]))
+  })
+  pE_prior_list <- lapply(1:narm_21, function(r) {
+    expit(MtxProd(X.mtx.all[[r]], Beta_prior))
+  })
+  logpE_prior0_list <- lapply(1:narm_21, function(r)
+    log(pE_prior_list[[r]])
+  )
+  logpE_prior1_list <- lapply(1:narm_21, function(r)
+    log(1 - pE_prior_list[[r]])
+  )
+
+  for (t in 1:T_22) {
+    set.seed(seed + 10 * t)
+    currn_22 <- currn_22 + n_22 * proc_22 # current sample size
+    Yt_22 <- Yt_22 + sapply(1:sn_22, function(r) rbinom(rep(1, narm_22), n_22[, r], prob = tox_22[, r])) * proc_22
+    Ye_22 <- Ye_22 + sapply(1:sn_22, function(r) rbinom(rep(1, narm_22), n_22[, r], prob = eff_22[, r])) * proc_22
+    data_Y <- t(rbind(Ye_22, Ye_21))
+    data_N <- t(rbind(currn_22, currn_21[, which(j_ast1 > 0)]))
+    for(i in 1:sn_22) {
+      if (proc_22[narm_22, i] == 0) {
+        fprob_1[, i] <- fprob_2[, i] <- -1
+        if (t == T_22) BCI[, i] <- -2
+      } else {
+        pE_prior <- pE_prior_list[[j_ast1_tmp[i]]]
+        logpE_prior0 <- logpE_prior0_list[[j_ast1_tmp[i]]]
+        logpE_prior1 <- logpE_prior1_list[[j_ast1_tmp[i]]]
+        X.mtx <- X.mtx.all[[j_ast1_tmp[i]]]
+        pE_post <- get.post(
+          Beta_prior = Beta_prior, X.mtx = X.mtx, pE_prior = pE_prior,
+          logpE_prior0 = logpE_prior0, logpE_prior1 = logpE_prior1,
+          data_Y = data_Y[i, ], data_N = data_N[i, ]
+        )
+        # futility stopping prob
+        fprob_1[, i] <- c(100, sapply(2:narm_22, function(r) mean(pE_post[r, ] > pE_post[1, ])))
+        if (fda_sc %in% c(1, 3)) { # terminate single arm A or B
+          fprob_2[, i] <- c(100, sapply(2:(narm_22 - 1), function(r) mean(pE_post[r, ] > pE_post[narm_22, ])), 100)
+        } else {
+          fprob_2[, i] <- c(100, 100)
+        }
+        if (t == T_22) {
+          BCI[, i] <- sapply(1:(narm_22 - 1), function(r) mean(pE_post[narm_22, ] > pE_post[r, ]))
+        }
+      }
+    }
+    # overly toxic stopping
+    proc_22[which(proc_22 != 0 & pbeta(upper_t, (0.1 + Yt_pre + Yt_22), (0.1 + Nt_pre + currn_22 - Yt_pre - Yt_22)) < (1 - C_t))] <- 0
+    # futility stopping
+    proc_22[which(proc_22 != 0 & fprob_1 < (1 - C_f1))] <- 0
+    proc_22[which(proc_22 != 0 & fprob_2 < (1 - C_f2))] <- 0
+    if (t == T_22) {
+      BCI[, which(proc_22[narm_22, ] == 0)] <- -2
+    }
+  }
+  output <- list(
+    true_utility = true_utility, utility = utility, j_ast1 = j_ast1,
+    Y_21 = Y_21, currn_21 = currn_21, piE_hat_21 = piE_hat_21,
+    currn_22 = currn_22, BCI = BCI
+  )
+  return(output)
+}
+
 # summarize results
 get.results <- function(output, case, scenario, u.score, period.eff = 0,
                         upper_t, lower_e, Ce, c0, method,
@@ -512,11 +735,11 @@ source(scenario.path)
 
 ### MTD-Ind ===================================================================================
 
-# To run the MTD-Ind design for Scenario 1 under Case 1, use:
+# To run the MTD-Ind design for Scenario 1 under Case 1 with a period effect of 0, use:
 mtdind.output <- mtdind.getOC(
   case = 1, n.s1 = 24, n.s2 = 40, scenario = 1,
   u_score = c(0, 60, 40, 100), upper_t = 0.35, lower_e = 0.25,
-  seed = 1234, sn = 5000
+  period_eff = 0, seed = 1234, sn = 5000
 )
 
 # Note: This code may take approximately 1–2 hours to run.
@@ -536,12 +759,12 @@ get.results(
   method = "MTD-Ind", sn_all = 5000
   )
 
-# To reproduce other scenarios and cases from the paper, run the above functions with `case` set to 1, 2, or 3, and `scenario` set to 1 through 10.
+# To reproduce other scenarios and cases from the paper, run the above functions with `case` set to 1, 2, or 3, and `scenario` set to 1 through 10. You may also vary `period.eff` between 0 and 0.2 as desired.
 
 
 ### OBD-Ind ===================================================================================
 
-# To run the OBD-Ind design for Scenario 1 under Case 1, use:
+# To run the OBD-Ind design for Scenario 1 under Case 1 with a period effect of 0, use:
 obdind.output <- obdind.getOC(
   case = 1, n.s1 = 24, n.s2 = 40, scenario = 1,
   u_score = c(0, 60, 40, 100), upper_t = 0.35, lower_e = 0.25,
@@ -565,16 +788,16 @@ get.results(
   method = "OBD-Ind", sn_all = 5000
 )
 
-# To reproduce other scenarios and cases from the paper, run the above functions with `case` set to 1, 2, or 3, and `scenario` set to 1 through 10.
+# To reproduce other scenarios and cases from the paper, run the above functions with `case` set to 1, 2, or 3, and `scenario` set to 1 through 10. You may also vary `period.eff` between 0 and 0.2 as desired.
 
 
 ### OBD-Pool ===================================================================================
 
-# To run the OBD-Ind design for Scenario 1 under Case 1, use:
-obdind.output <- obdind.getOC(
-  case = 1, n.s1 = 24, n.s2 = 40, scenario = 1,
+# To run the OBD-Pool design for Scenario 1 under Case 1 with a period effect of 0, use:
+obdpool.output <- pool.getOC(
+  case = 1, n.s1 = 24, n.s2 = 24, scenario = 1,
   u_score = c(0, 60, 40, 100), upper_t = 0.35, lower_e = 0.25,
-  period_eff = 0, seed = 1274, sn = 5000
+  period_eff = 0, seed = 1234, sn = 5000
 )
 
 # Note: This code may take approximately 1–2 hours to run.
@@ -582,19 +805,19 @@ obdind.output <- obdind.getOC(
 # Assuming the code above has been successfully run, the function would return:
 # (load the saved output as follows)
 
-load(system.file("example_Rdata", "output_obdind.Rdata", package = "COCA"))
-output_obdind <- output
+load(system.file("example_Rdata", "output_obdpool.Rdata", package = "COCA"))
+output_obdpool <- output
 
-# This creates an object named `output_obdind`, which contains the results returned by the function `obdind.getOC`. To get the results for Scenario 1 under Case 1 of the OBD-Ind design, run:
+# This creates an object named `output_obdpool`, which contains the results returned by the function `pool.getOC`. To get the results for Scenario 1 under Case 1 of the OBD-Pool design, run:
 # (The corresponding Ce and c0 values can be found in Table 1 of the paper)
 
 get.results(
-  output = output_obdind, case = 1, scenario = 1, u.score = c(0, 60, 40, 100),
-  period.eff = 0, upper_t = 0.35, lower_e = 0.25, Ce = 0.9049, c0 = 0.81,
-  method = "OBD-Ind", sn_all = 5000
+  output = output_obdpool, case = 1, scenario = 1, u.score = c(0, 60, 40, 100),
+  period.eff = 0, upper_t = 0.35, lower_e = 0.25, Ce = 0.9122, c0 = 0.74,
+  method = "OBD-Pool", sn_all = 5000
 )
 
-# To reproduce other scenarios and cases from the paper, run the above functions with `case` set to 1, 2, or 3, and `scenario` set to 1 through 10.
+# To reproduce other scenarios and cases from the paper, run the above functions with `case` set to 1, 2, or 3, and `scenario` set to 1 through 10. You may also vary `period.eff` between 0 and 0.2 as desired.
 
 
 
