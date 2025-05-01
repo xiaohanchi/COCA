@@ -81,6 +81,16 @@ COCA.getOC(
 
 ### Competing Approaches
 
+We provide R scripts that implement the competing approaches mentioned
+in the paper<sup>\[1\]</sup>. To access them, use the following R code
+to open the files:
+
+``` r
+open_example("MTD-Ind.R")
+open_example("OBD-Ind.R")
+open_example("OBD-Pool.R")
+```
+
 ### Examples: Redesigning the NCT02519348 Trial
 
 This example provides a step-by-step tutorial on redesigning the

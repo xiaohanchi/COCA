@@ -2,6 +2,7 @@
 
 export(COCA.calibration)
 export(COCA.getOC)
+export(open_example)
 import(RcppEigen)
 import(cli)
 import(coda)
