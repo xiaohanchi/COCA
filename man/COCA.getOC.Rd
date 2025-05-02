@@ -5,7 +5,7 @@
 \title{Run the COCA Design}
 \usage{
 COCA.getOC(
-  case = 1,
+  case,
   n.stage1 = 24,
   n.stage2,
   Ce,
@@ -34,7 +34,7 @@ COCA.getOC(
   C.f2 = 0.9,
   utility.score = c(0, 60, 40, 100),
   rho = 0.2,
-  prior.sample = 1e+05,
+  prior.sample = 1e+06,
   seed = 123,
   n.simu = 5000
 )
@@ -87,13 +87,11 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{rho}{Correlation between toxicity and efficacy}
 
-\item{prior.sample}{Number of prior draws in each simulation}
+\item{prior.sample}{Number of prior draws used to fit the Bayesian model in each simulation}
 
 \item{seed}{Random seed}
 
 \item{n.simu}{Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.}
-
-\item{period.effect}{Period effect}
 }
 \value{
 Returns the operating characteristics of stage 1 (selection and expected sample size) and stage 2 (power, GP, SR, OSR, and expected sample size).
@@ -105,8 +103,8 @@ This function uses \code{activeSet()} from the \code{isotone} package to perform
 Run the COCA design and get its operating characteristics.
 }
 \examples{
-# \code{n.simu = 20} is used for illustration purposes. For more accurate results,
-# consider using a larger value for \code{n.simu}, such as 5000.
+# \code{prior.sample = 1e5} is used for illustration purposes. For more accurate results,
+# consider using a larger value for \code{prior.sample}, such as 10^6.
 
 # Scenario 1 (period effect = 0)
 \donttest{

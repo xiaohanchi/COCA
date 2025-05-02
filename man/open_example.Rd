@@ -15,7 +15,6 @@ Opens an example R script in the editor.
 \examples{
 \donttest{
 open_example("alt_designs.R")
-
 }
 
 }

@@ -3,10 +3,9 @@
 #' Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power across a range of stage 2 sample sizes for a given configuration.
 #'
 #' @details
-#' For each candidate value in `n.stage2`, the function computes the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, along with power and type I error rates. It returns the full results across all sample sizes considered, as well as the optimal configuration that first meets the target power and validity criteria.
+#' For each candidate value in `n.stage2`, the function computes the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, along with power and type I error rates. It returns the full results for all considered sample sizes, as well as the optimal configuration that achieves the target power and success rate.
 #'
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
-#' @param n.comb.dose Number of combination arms in stage 1
 #' @param n.stage1 Sample size for stage 1
 #' @param n.stage2 A numeric vector of candidate stage 2 sample sizes to evaluate during calibration.
 #' @param dosage.ctrl Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}. If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.
@@ -20,13 +19,13 @@
 #' @param eff.alt.A Efficacy rate of single arm A (\eqn{\widetilde{q}_{A}}) in the alternative hypothesis. This argument is ignored if arm A is not included.
 #' @param eff.alt.B Efficacy rate of single arm B (\eqn{\widetilde{q}_{B}}) in the alternative hypothesis. This argument is ignored if arm B is not included.
 #' @param eff.alt.AB Efficacy rate of combination arm AB (\eqn{\widetilde{q}_{AB}}) in the alternative hypothesis.
-#' @param period.effect Vector of possible period effects
+#' @param period.effect A numeric vector of possible period effects
 #' @param alpha.level Type I error level (\eqn{\alpha_0}) under no period effect assumption
 #' @param alpha.max Maximum type I error level (\eqn{\alpha_{\max}}) under non-zero period effect
 #' @param fsr.level False success rate level (\eqn{\gamma_0}) under no period effect assumption
 #' @param power.target Target power (\eqn{\phi_0}) under no period effect assumption
 #' @param tsr.target Target true success rate (\eqn{\zeta_0}) under no period effect assumption
-#' @param prior.sample Number of prior draws in each simulation
+#' @param prior.sample Number of prior draws used to fit the Bayesian model in each simulation
 #' @param seed Random seed
 #' @param n.simu Number of simulation replicates
 #'
@@ -40,14 +39,14 @@
 #'
 #' \donttest{
 #' COCA.calibration(
-#'   case = 1, n.stage1 = 24, n.stage2 = seq(20, 26, 2),
+#'   case = 1, n.stage1 = 24, n.stage2 = seq(20, 30, 2),
 #'   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
 #'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
 #'   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
 #'   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05,
 #'   power.target = 0.90, tsr.target = 0.80,
-#'   prior.sample = 1e4, seed = 123, n.simu = 1000
+#'   prior.sample = 1e5, seed = 123, n.simu = 1000
 #' )
 #' }
 #'
@@ -64,7 +63,7 @@ COCA.calibration <- function(
     case, n.stage1 = 24, n.stage2 = c(),
     dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 0, dosage.singleB = 0,
     dosage.comb = list(A = c(), B = c()), eff.null, eff.alt.SOC, eff.alt.A = 0,
-    eff.alt.B = 0, eff.alt.AB, period.effect = c(0.1, 0.2, 0.3),
+    eff.alt.B = 0, eff.alt.AB, period.effect,
     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, power.target = 0.90, tsr.target = 0.80,
     prior.sample = 1e6, seed = 123, n.simu = 1e4){
 

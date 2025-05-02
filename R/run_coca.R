@@ -27,9 +27,8 @@
 #' @param C.f1,C.f2 Probability cutoffs in stage 2
 #' @param utility.score Vector of utility score: \code{c(b1, b2, b3, b4)} represents the utility for (toxicity, no efficacy), (no toxicity, no efficacy), (toxicity, efficacy), and (no toxicity, efficacy), respectively.
 #' @param rho Correlation between toxicity and efficacy
-#' @param period.effect Period effect
 #' @param n.simu Number of simulation replicates. The default value \code{n.simu = 10} is used for illustration purposes and is small to reduce computation time. For more accurate results, consider using a larger value, such as 5000.
-#' @param prior.sample Number of prior draws in each simulation
+#' @param prior.sample Number of prior draws used to fit the Bayesian model in each simulation
 #' @param seed Random seed
 #' @description This function uses `activeSet()` from the `isotone` package to perform isotonic regression.
 #'
@@ -44,8 +43,8 @@
 #' @export
 #'
 #' @examples
-#' # \code{n.simu = 20} is used for illustration purposes. For more accurate results,
-#' # consider using a larger value for \code{n.simu}, such as 5000.
+#' # \code{prior.sample = 1e5} is used for illustration purposes. For more accurate results,
+#' # consider using a larger value for \code{prior.sample}, such as 10^6.
 #'
 #' # Scenario 1 (period effect = 0)
 #' \donttest{
@@ -106,7 +105,7 @@
 #'   utility.score = c(0, 60, 40, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
 #' )
 #' }
-COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0, nlook.stage1 = 2, nlook.stage2 = 2,
+COCA.getOC <- function(case, n.stage1 = 24, n.stage2, Ce, c0, nlook.stage1 = 2, nlook.stage2 = 2,
                        dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 0, dosage.singleB = 0,
                        dosage.comb = list(A = c(), B = c()),
                        tox.SOC, eff.SOC, tox.A = 0, tox.B = 0, eff.A = 0, eff.B = 0,

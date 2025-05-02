@@ -78,7 +78,7 @@ COCA.getOC(
 )
 ```
 
-`prior.sample` is set to $10^5$ for illustration. For more accurate results, we recommend using `prior.sample = 1e6`. **To fully reproduce the results in our paper, please use `prior.sample = 1e6`, while keeping all other inputs unchanged. For other simulation settings, replace the inputs as appropriate, following the guidelines in the 'Numerical Studies' section of paper [1].**
+`prior.sample` is set to $10^5$ for illustration. For more accurate results, we recommend using `prior.sample = 1e6`. **To fully reproduce the results in our paper, please use `prior.sample = 1e6`, while keeping all other inputs unchanged. For other simulation settings, replace the inputs as appropriate, following the guidelines in the 'Numerical Studies' section of paper [1].** 
 
 ##### \* Competing Approaches
 

@@ -8,7 +8,6 @@
 #'
 #' @examples \donttest{
 #' open_example("alt_designs.R")
-#'
 #' }
 #'
 open_example <- function(name = "example_code.R") {

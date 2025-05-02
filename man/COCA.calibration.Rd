@@ -17,7 +17,7 @@ COCA.calibration(
   eff.alt.A = 0,
   eff.alt.B = 0,
   eff.alt.AB,
-  period.effect = c(0.1, 0.2, 0.3),
+  period.effect,
   alpha.level = 0.1,
   alpha.max = 0.2,
   fsr.level = 0.05,
@@ -55,7 +55,7 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{eff.alt.AB}{Efficacy rate of combination arm AB (\eqn{\widetilde{q}_{AB}}) in the alternative hypothesis.}
 
-\item{period.effect}{Vector of possible period effects}
+\item{period.effect}{A numeric vector of possible period effects}
 
 \item{alpha.level}{Type I error level (\eqn{\alpha_0}) under no period effect assumption}
 
@@ -67,13 +67,11 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{tsr.target}{Target true success rate (\eqn{\zeta_0}) under no period effect assumption}
 
-\item{prior.sample}{Number of prior draws in each simulation}
+\item{prior.sample}{Number of prior draws used to fit the Bayesian model in each simulation}
 
 \item{seed}{Random seed}
 
 \item{n.simu}{Number of simulation replicates}
-
-\item{n.comb.dose}{Number of combination arms in stage 1}
 }
 \value{
 A named list with the following elements:
@@ -86,20 +84,20 @@ A named list with the following elements:
 Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power across a range of stage 2 sample sizes for a given configuration.
 }
 \details{
-For each candidate value in \code{n.stage2}, the function computes the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, along with power and type I error rates. It returns the full results across all sample sizes considered, as well as the optimal configuration that first meets the target power and validity criteria.
+For each candidate value in \code{n.stage2}, the function computes the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, along with power and type I error rates. It returns the full results for all considered sample sizes, as well as the optimal configuration that achieves the target power and success rate.
 }
 \examples{
 
 \donttest{
 COCA.calibration(
-  case = 1, n.stage1 = 24, n.stage2 = seq(20, 26, 2),
+  case = 1, n.stage1 = 24, n.stage2 = seq(20, 30, 2),
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05,
   power.target = 0.90, tsr.target = 0.80,
-  prior.sample = 1e4, seed = 123, n.simu = 1000
+  prior.sample = 1e5, seed = 123, n.simu = 1000
 )
 }
 
