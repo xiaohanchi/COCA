@@ -68,6 +68,8 @@ COCA.calibration <- function(
     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, power.target = 0.90, tsr.target = 0.80,
     prior.sample = 1e6, seed = 123, n.simu = 1e4){
 
+  n.stage2 <- sort(n.stage2)
+
   for (ii in seq_along(n.stage2)) {
     cli_alert(paste0("n.stage2 = ", n.stage2[ii], ": in process"))
     output.tmp <- one.calibration(

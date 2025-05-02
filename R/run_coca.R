@@ -113,7 +113,7 @@ COCA.getOC <- function(case = 1, n.stage1 = 24, n.stage2, Ce, c0, nlook.stage1 =
                        tox.AB = c(), eff.AB.s1 = c(), eff.AB.s2 = c(), tox.isomat,
                        tox.upper, eff.lower, Cs = 0.85, Ct = 0.9, C.f1 = 0.9, C.f2 = 0.9,
                        utility.score = c(0, 60, 40, 100), rho = 0.2,
-                       prior.sample = 1e5, seed = 123, n.simu = 5000) {
+                       prior.sample = 1e6, seed = 123, n.simu = 5000) {
   # Check input
 
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")

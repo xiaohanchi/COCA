@@ -37,8 +37,10 @@ Load COCA package:
 library(COCA)
 ```
 
-To search for the optimal stage 2 sample size from 20 to 30 and get the
-corresponding design parameters, run:
+To search for the optimal stage 2 sample size between 20 and 30 and
+obtain the corresponding design parameters under `case = 1` and the
+settings described in the ‘Numerical Studies’ section of paper \[1\],
+run:
 
 ``` r
 COCA.calibration(
@@ -48,14 +50,18 @@ COCA.calibration(
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35, 
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3), 
   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, power.target = 0.90, tsr.target = 0.80,
-  prior.sample = 1e4, seed = 123, n.simu = 1000
+  prior.sample = 1e5, seed = 123, n.simu = 1000
 )
 ```
 
 For more accurate calibration, consider increasing `prior.sample` to
 $10^6$ and setting `n.simu` to $10^4$, though this may require
 additional computation time. If the power or success rate does not reach
-the target, increase `n.stage2` and rerun the calibration.
+the target, increase `n.stage2` and rerun the calibration. **To fully
+reproduce the results in our paper, please use the following inputs:
+`period.effect = seq(-0.1, 0.5, 0.05)`, `prior.sample = 1e6`, and
+`n.simu = 1e4`, while keeping all other inputs unchanged. For other
+trial cases, please use `case = 2` or `case = 3` as appropriate.**
 
 Once the optimal `n.stage2` is found, run simulations to get the
 operating characteristics of the COCA design with the calibrated
@@ -76,8 +82,12 @@ COCA.getOC(
 )
 ```
 
-`prior.sample` is set to $10^5$ for illustration. To reproduce the
-results in our paper, please use `prior.sample = 1e6`.
+`prior.sample` is set to $10^5$ for illustration. For more accurate
+results, we recommend using `prior.sample = 1e6`. **To fully reproduce
+the results in our paper, please use `prior.sample = 1e6`, while keeping
+all other inputs unchanged. For other simulation settings, replace the
+inputs as appropriate, following the guidelines in the ‘Numerical
+Studies’ section of paper \[1\].**
 
 ##### \* Competing Approaches
 
@@ -129,8 +139,9 @@ eff.alt.AB = 0.25
 We also hope to control the maximum type I error under potential period
 effects within the range of 0 to 0.1, so we specify
 `period.effect = seq(0, 0.1, 0.02)`. For other configurations, please
-refer to Section 5 of \[1\]. With all these arguments in place, we can
-proceed to calibrate our design parameters.
+refer to the ‘Redesign NCT02519348 Trial’ section of paper \[1\]. With
+all these arguments in place, we can proceed to calibrate our design
+parameters.
 
 ##### 2. Calibration
 
@@ -198,8 +209,8 @@ tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1)
 ```
 
 We use a utility score of `utility.score = c(0, 40, 60, 100)` in stage 1
-dose optimization. For additional configurations, please refer to
-Section 5 of \[1\].
+dose optimization. For additional configurations, please refer to the
+‘Redesign NCT02519348 Trial’ section of paper \[1\].
 
 First, let’s assume no period effect between stages 1 and 2 and obtain
 the design operating characteristics:
