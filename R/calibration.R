@@ -153,7 +153,7 @@ one.calibration <- function(
     stop(sprintf("'eff.alt.A' or 'eff.alt.B' should not exceed 'eff.alt.AB'."))
   }
 
-  if (!is.numeric(period.effect) || any(period.effect < 0)) stop("'period.effect' must be a numeric vector with non-negative values.")
+  if (!is.numeric(period.effect)) stop("'period.effect' must be a numeric vector.")
   if (any(eff.null + period.effect > 1)) {
     stop(sprintf("Each 'eff.null + period.effect' must be <= 1. Found max = %s", max(eff.null + period.effect)))
   }
