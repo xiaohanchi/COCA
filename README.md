@@ -173,7 +173,7 @@ COCA.calibration(
 This code may take a while to run… (Note: In my own implementation, I
 used high-performance computing clusters and parallel computing to
 accelerate the process.) For illustration, consider using a smaller
-number of prior draws (e.g., `prior.sample = 1e4`) and simulation
+number of prior draws (e.g., `prior.sample = 1e5`) and simulation
 replicates (e.g., `n.simu = 1000`) to reduce runtime. Once completed, we
 obtained the optimal stage 2 sample size of 38, along with design
 cutoffs $C_{e1}=0.7710$ and $c_0=0.81$, as reported in our paper.
