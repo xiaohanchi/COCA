@@ -1,6 +1,6 @@
 Package: COCA
 Title: Combination Dose Optimization and Component Contribution Assessment
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: 
     c(person("Xiaohan", "Chi", , "xchi@mdanderson.org", role = c("aut", "cre")),
     person("Ruitao", "Lin", , "rlin@mdanderson.org", role = c("aut")),
