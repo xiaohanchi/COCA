@@ -1,11 +1,14 @@
 #' Calibrate COCA parameters
 #'
-#' Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power for a given configuration.
+#' Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power across a range of stage 2 sample sizes for a given configuration.
+#'
+#' @details
+#' For each candidate value in `n.stage2`, the function computes the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, along with power and type I error rates. It returns the full results across all sample sizes considered, as well as the optimal configuration that first meets the target power and validity criteria.
 #'
 #' @param case Trial type for stage 2. \code{case = 1} for 4-arm trial comparing AB vs. A vs. B vs. SOC; \code{case = 2} for 3-arm trial comparing AB vs. A (or B) vs. SOC; \code{case = 3} for 2-arm trial comparing AB vs. SOC.
 #' @param n.comb.dose Number of combination arms in stage 1
 #' @param n.stage1 Sample size for stage 1
-#' @param n.stage2 Sample size for stage 2
+#' @param n.stage2 A numeric vector of candidate stage 2 sample sizes to evaluate during calibration.
 #' @param dosage.ctrl Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}. If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.
 #' @param dosage.singleA Dosage level of drug A in the single arm for stage 2.
 #' @param dosage.singleB Dosage level of drug B in the single arm for stage 2.
@@ -21,48 +24,33 @@
 #' @param alpha.level Type I error level (\eqn{\alpha_0}) under no period effect assumption
 #' @param alpha.max Maximum type I error level (\eqn{\alpha_{\max}}) under non-zero period effect
 #' @param fsr.level False success rate level (\eqn{\gamma_0}) under no period effect assumption
-#' @param tsr.level Target true success rate (\eqn{\zeta_0}) under no period effect assumption
+#' @param power.target Target power (\eqn{\phi_0}) under no period effect assumption
+#' @param tsr.target Target true success rate (\eqn{\zeta_0}) under no period effect assumption
 #' @param prior.sample Number of prior draws in each simulation
 #' @param seed Random seed
 #' @param n.simu Number of simulation replicates
 #'
-#' @return Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
+#' @return A named list with the following elements:
+#' \describe{
+#'   \item{full.results}{A tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates for all tried sample sizes.}
+#'   \item{optimal.config}{A tibble data frame with the same metrics for the first sample size meeting the target criteria.}
+#' }
 #'
 #' @examples
 #'
-#' # To calibrate for a specific sample size candidate, run:
 #' \donttest{
 #' COCA.calibration(
-#'   case = 1, n.stage1 = 24, n.stage2 = 20,
+#'   case = 1, n.stage1 = 24, n.stage2 = seq(20, 26, 2),
 #'   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
 #'   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
 #'   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
 #'   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-#'   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+#'   alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05,
+#'   power.target = 0.90, tsr.target = 0.80,
 #'   prior.sample = 1e4, seed = 123, n.simu = 1000
 #' )
 #' }
 #'
-#' # For a grid search, try:
-#' \donttest{
-#' n.stage2 <- 10:20
-#' for (i in seq_along(n.stage2)) {
-#'   output.tmp <- COCA.calibration(
-#'     case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
-#'     dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
-#'     dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-#'     eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-#'     eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-#'     alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-#'     prior.sample = 1e4, seed = 123, n.simu = 1000
-#'   )
-#'   if (i == 1) {
-#'     output <- output.tmp
-#'   } else {
-#'     output <- rbind(output, output.tmp)
-#'   }
-#' }
-#' }
 
 #' @import stats
 #' @import pbapply
@@ -73,13 +61,49 @@
 #' @export
 #'
 COCA.calibration <- function(
-    case, n.stage1 = 24, n.stage2,
+    case, n.stage1 = 24, n.stage2 = c(),
     dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 0, dosage.singleB = 0,
-    dosage.comb = list(A = c(), B = c()),
-    eff.null, eff.alt.SOC, eff.alt.A = 0,
+    dosage.comb = list(A = c(), B = c()), eff.null, eff.alt.SOC, eff.alt.A = 0,
     eff.alt.B = 0, eff.alt.AB, period.effect = c(0.1, 0.2, 0.3),
-    alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-    prior.sample = 1e6, seed = 123, n.simu = 1e4) {
+    alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, power.target = 0.90, tsr.target = 0.80,
+    prior.sample = 1e6, seed = 123, n.simu = 1e4){
+
+  for (ii in seq_along(n.stage2)) {
+    cli_alert(paste0("n.stage2 = ", n.stage2[ii], ": in process"))
+    output.tmp <- one.calibration(
+      case = case, n.stage1 = n.stage1, n.stage2 = n.stage2[ii],
+      dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA, dosage.singleB = dosage.singleB,
+      dosage.comb = dosage.comb, eff.null = eff.null, eff.alt.SOC = eff.alt.SOC, eff.alt.A = eff.alt.A,
+      eff.alt.B = eff.alt.B, eff.alt.AB = eff.alt.AB, period.effect = period.effect,
+      alpha.level = alpha.level, alpha.max = alpha.max, fsr.level = fsr.level, tsr.target = tsr.target,
+      prior.sample = prior.sample, seed = seed, n.simu = n.simu
+    )
+
+    if(ii == 1){
+      output <- output.tmp
+    } else {
+      output <- rbind(output, output.tmp)
+    }
+
+    if(output$Power[ii] >= power.target & output$c0[ii] > 0){
+      optimal <- output.tmp
+      break
+    } else if (ii == length(n.stage2)) {
+      optimal <- c()
+      warning(paste0("Target power or true success rate not reached. Please consider increasing the stage 2 sample size by exploring the range (", max(n.stage2), ",  ", (max(n.stage2) + 10), ")."))
+    }
+  }
+
+  return(list(full.results = output, optimal.config = optimal))
+
+}
+
+#' @keywords internal
+one.calibration <- function(
+    case, n.stage1, n.stage2,
+    dosage.ctrl, dosage.singleA, dosage.singleB, dosage.comb,
+    eff.null, eff.alt.SOC, eff.alt.A, eff.alt.B, eff.alt.AB, period.effect,
+    alpha.level, alpha.max, fsr.level, tsr.target, prior.sample, seed, n.simu) {
   # Check input
   if (!case %in% c(1, 2, 3)) stop("'case' must be one of: 1, 2, or 3.")
   if (case == 1 & (dosage.singleA == 0 | dosage.singleB == 0)) {
@@ -133,7 +157,7 @@ COCA.calibration <- function(
     stop(sprintf("Each 'eff.null + period.effect' must be <= 1. Found max = %s", max(eff.null + period.effect)))
   }
 
-  for (param_name in c("alpha.level", "alpha.max", "fsr.level", "tsr.level")) {
+  for (param_name in c("alpha.level", "alpha.max", "fsr.level", "tsr.target")) {
     param_value <- get(param_name)
     if (!is.numeric(param_value) || param_value < 0 || param_value > 1) {
       stop(sprintf("'%s' must be between 0 and 1.", param_name))
@@ -147,7 +171,6 @@ COCA.calibration <- function(
     Ce1 = NA, c0 = NA, Power = NA, TypeI = NA
   )
   n.comb.dose <- length(dosage.comb[["A"]])
-  cli_alert("Null Scneario: in process")
   BCI_null <- run.whole(
     fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
     dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA,
@@ -155,9 +178,7 @@ COCA.calibration <- function(
     eff.ctrl = eff.null, eff.A = eff.null, eff.B = eff.null, eff.AB = eff.null,
     prior.sample = prior.sample, batch.idx = seed, batch.sn = n.simu
   )
-  cli_alert_info("Null Scneario: done")
 
-  cli_alert("Alternative Scneario: in process")
   BCI_alt <- run.whole(
     fda.case = case, n.comb.dose = n.comb.dose, n.stage1 = n.stage1, n.stage2 = n.stage2,
     dosage.ctrl = dosage.ctrl, dosage.singleA = dosage.singleA,
@@ -165,10 +186,8 @@ COCA.calibration <- function(
     eff.ctrl = eff.alt.SOC, eff.A = eff.alt.A, eff.B = eff.alt.B, eff.AB = eff.alt.AB,
     prior.sample = prior.sample, batch.idx = seed, batch.sn = n.simu
   )
-  cli_alert_info("Alternative Scneario: done")
 
   Ce1_0 <- round(quantile(BCI_null[1, ], (1 - alpha.level)), digits = 4)
-  cli_alert("Period Effect: in process")
   BCI_period <- list()
   Ce1_p <- c()
   for (pp in seq_along(period.effect)) {
@@ -182,7 +201,6 @@ COCA.calibration <- function(
     )
     Ce1_p[pp] <- round(quantile(BCI_period[[pp]][1, ], (1 - alpha.max)), digits = 4)
   }
-  cli_alert_info("Period Effect: done")
 
   Ce1 <- max(Ce1_0, max(Ce1_p))
   Ce.k.lower <- .find_klower(
@@ -194,19 +212,14 @@ COCA.calibration <- function(
   } else {
     Ce.k <- .find_kupper(
       fda.case = case,
-      k.min = Ce.k.lower, Ce.1 = Ce1, BCI = BCI_alt, level = tsr.level
+      k.min = Ce.k.lower, Ce.1 = Ce1, BCI = BCI_alt, level = tsr.target
     ) %>% suppressWarnings()
-  }
-
-  if (Ce.k == -1) {
-    warning(paste0("n.stage2 = ", n.stage2, ": No k value fulfilling the condition was found. Consider increasing the sample size."))
   }
 
   summary_tab$Ce1 <- Ce1
   summary_tab$c0 <- Ce.k
   summary_tab$Power <- round((length(which(BCI_alt[1, ] > Ce1)) / dim(BCI_alt)[2]), 4)
   summary_tab$TypeI <- round((length(which(BCI_null[1, ] > Ce1)) / dim(BCI_null)[2]), 4)
-  cli_alert_info(paste0("DONE (n.stage2 = ", n.stage2, ")"))
   return(summary_tab)
 }
 
@@ -291,12 +304,12 @@ COCA.calibration <- function(
     pw.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]) & BCI[3, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
-    k <- max(k0[which(pw.eff >= level)])
+    k <- min(k0[which(pw.eff >= level)])
   } else if (fda.case == 2) {
     pw.eff <- sapply(seq_along(k0), function(r) {
       length(which(BCI[1, ] > Ce.1 & BCI[2, ] > (Ce.1 * k0[r]))) / (dim(BCI)[2])
     })
-    k <- max(k0[which(pw.eff >= level)])
+    k <- min(k0[which(pw.eff >= level)])
   } else if (fda.case == 3) {
     k <- 1
   }

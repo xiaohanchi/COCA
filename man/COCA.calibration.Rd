@@ -7,7 +7,7 @@
 COCA.calibration(
   case,
   n.stage1 = 24,
-  n.stage2,
+  n.stage2 = c(),
   dosage.ctrl = c(A = 0, B = 0),
   dosage.singleA = 0,
   dosage.singleB = 0,
@@ -21,7 +21,8 @@ COCA.calibration(
   alpha.level = 0.1,
   alpha.max = 0.2,
   fsr.level = 0.05,
-  tsr.level = 0.8,
+  power.target = 0.9,
+  tsr.target = 0.8,
   prior.sample = 1e+06,
   seed = 123,
   n.simu = 10000
@@ -32,7 +33,7 @@ COCA.calibration(
 
 \item{n.stage1}{Sample size for stage 1}
 
-\item{n.stage2}{Sample size for stage 2}
+\item{n.stage2}{A numeric vector of candidate stage 2 sample sizes to evaluate during calibration.}
 
 \item{dosage.ctrl}{Dosage level of the control arm for stage 2. For an SOC control, use \code{c(A = 0, B = 0)}. If one of the single agents is used as the SOC (e.g., drug A 300 mg), use \code{c(A = 300, B = 0)}.}
 
@@ -62,7 +63,9 @@ All dosage values can be on any scale but must use the same scale across \code{d
 
 \item{fsr.level}{False success rate level (\eqn{\gamma_0}) under no period effect assumption}
 
-\item{tsr.level}{Target true success rate (\eqn{\zeta_0}) under no period effect assumption}
+\item{power.target}{Target power (\eqn{\phi_0}) under no period effect assumption}
+
+\item{tsr.target}{Target true success rate (\eqn{\zeta_0}) under no period effect assumption}
 
 \item{prior.sample}{Number of prior draws in each simulation}
 
@@ -73,44 +76,31 @@ All dosage values can be on any scale but must use the same scale across \code{d
 \item{n.comb.dose}{Number of combination arms in stage 1}
 }
 \value{
-Returns a tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates.
+A named list with the following elements:
+\describe{
+\item{full.results}{A tibble data frame containing the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, and the corresponding power and type I error rates for all tried sample sizes.}
+\item{optimal.config}{A tibble data frame with the same metrics for the first sample size meeting the target criteria.}
+}
 }
 \description{
-Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power for a given configuration.
+Computes the optimal design cutoffs (\eqn{C_{e1}} and \eqn{c_0}) and the corresponding power across a range of stage 2 sample sizes for a given configuration.
+}
+\details{
+For each candidate value in \code{n.stage2}, the function computes the calibrated cutoffs \eqn{C_{e1}} and \eqn{c_0}, along with power and type I error rates. It returns the full results across all sample sizes considered, as well as the optimal configuration that first meets the target power and validity criteria.
 }
 \examples{
 
-# To calibrate for a specific sample size candidate, run:
 \donttest{
 COCA.calibration(
-  case = 1, n.stage1 = 24, n.stage2 = 20,
+  case = 1, n.stage1 = 24, n.stage2 = seq(20, 26, 2),
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
+  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05,
+  power.target = 0.90, tsr.target = 0.80,
   prior.sample = 1e4, seed = 123, n.simu = 1000
 )
 }
 
-# For a grid search, try:
-\donttest{
-n.stage2 <- 10:20
-for (i in seq_along(n.stage2)) {
-  output.tmp <- COCA.calibration(
-    case = 1, n.stage1 = 24, n.stage2 = n.stage2[i],
-    dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
-    dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
-    eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35,
-    eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3),
-    alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80,
-    prior.sample = 1e4, seed = 123, n.simu = 1000
-  )
-  if (i == 1) {
-    output <- output.tmp
-  } else {
-    output <- rbind(output, output.tmp)
-  }
-}
-}
 }

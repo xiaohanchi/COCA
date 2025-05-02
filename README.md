@@ -37,25 +37,25 @@ Load COCA package:
 library(COCA)
 ```
 
-For a specific stage 2 sample size (e.g., 20), get the calibrated design
-cutoffs and power:
+To search for the optimal stage 2 sample size from 20 to 30 and get the
+corresponding design parameters, run:
 
 ``` r
 COCA.calibration(
-  case = 1, n.stage1 = 24, n.stage2 = 20, 
+  case = 1, n.stage1 = 24, n.stage2 = seq(20, 30, 2), 
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300, 
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   eff.null = 0.25, eff.alt.SOC = 0.25, eff.alt.A = 0.35, 
   eff.alt.B = 0.35, eff.alt.AB = 0.55, period.effect = c(0.1, 0.2, 0.3), 
-  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, tsr.level = 0.80, 
+  alpha.level = 0.10, alpha.max = 0.20, fsr.level = 0.05, power.target = 0.90, tsr.target = 0.80,
   prior.sample = 1e4, seed = 123, n.simu = 1000
 )
 ```
 
 For more accurate calibration, consider increasing `prior.sample` to
 $10^6$ and setting `n.simu` to $10^4$, though this may require
-additional computation time. If the power or success rate do not reach
-the target, increase `n.stage2` and repeat the process.
+additional computation time. If the power or success rate does not reach
+the target, increase `n.stage2` and rerun the calibration.
 
 Once the optimal `n.stage2` is found, run simulations to get the
 operating characteristics of the COCA design with the calibrated
@@ -64,8 +64,8 @@ configurations:
 ``` r
 # E.g., scenario 1 (period effect = 0)
 COCA.getOC(
-  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66,
-  dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
+  case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66, nlook.stage1 = 2, 
+  nlook.stage2 = 2, dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
   dosage.comb = list(A = c(300, 300, 200), B = c(300, 200, 300)),
   tox.SOC = 0.10, eff.SOC = 0.25, tox.A = 0.25, tox.B = 0.15,
   eff.A = 0.25, eff.B = 0.25, tox.AB = c(0.30, 0.30, 0.15),
@@ -134,38 +134,30 @@ proceed to calibrate our design parameters.
 
 ##### 2. Calibration
 
-The `COCA.calibration` function will output the corresponding power and
-design cutoffs ($C_{e1}$ and $c_0$). If the target FSR and TSR levels
-are not met with the current settings, `COCA.calibration` will return
-$c_0=-1$ and issue a warning suggesting an increase in the stage 2
-sample size. We would like to assume `n.stage1 = 24` and search for the
-optimal stage 2 sample size, starting from 30, until the target power
-(`output$Power`) and success rate (`output$c0`) are achieved:
+The `COCA.calibration` function will return the optimal stage 2 sample
+size along with the corresponding power and calibrated design cutoffs
+($C_{e1}$ and $c_0$). If the target power or TSR is not achieved under
+the current settings, the function will issue a warning suggesting an
+increase in the stage 2 sample size. We would like to assume
+`n.stage1 = 24` and search for the optimal stage 2 sample size in the
+range of 32 to 40:
 
 ``` r
-power.target <- 0.90
-n.stage2 <- 30
-search.step <- 2
-output <- list(Power = 0, c0 = -1)
-while(output$Power < power.target | output$c0 == -1){
-  output <- COCA.calibration(
-    case = 2, n.stage1 = 24, n.stage2 = n.stage2, 
+COCA.calibration(
+    case = 2, n.stage1 = 24, n.stage2 = seq(32, 40, 2), 
     dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
     dosage.singleB = dosage.singleB,  dosage.comb = dosage.comb,
     eff.null = 0.07, eff.alt.SOC = 0.07, eff.alt.B = 0.12, eff.alt.AB = 0.25, 
     period.effect = seq(0, 0.1, 0.02), alpha.level = 0.10, alpha.max = 0.20, 
-    fsr.level = 0.05, tsr.level = 0.80, prior.sample = 1e6, seed = 123, n.simu = 1e4
+    fsr.level = 0.05, power.target = 0.90, tsr.target = 0.80, 
+    prior.sample = 1e6, seed = 123, n.simu = 1e4
   )
-  n.stage2 <- n.stage2 + search.step
-}
-
-output
 ```
 
     #> # A tibble: 1 × 6
     #>    case n.stage2   Ce1    c0 Power TypeI
     #>   <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl>
-    #> 1     2       38 0.771  0.84 0.914   0.1
+    #> 1     2       38 0.771  0.81 0.914   0.1
 
 This code may take a while to run… (Note: In my own implementation, I
 used high-performance computing clusters and parallel computing to
@@ -173,7 +165,7 @@ accelerate the process.) For illustration, consider using a smaller
 number of prior draws (e.g., `prior.sample = 1e4`) and simulation
 replicates (e.g., `n.simu = 1000`) to reduce runtime. Once completed, we
 obtained the optimal stage 2 sample size of 38, along with design
-cutoffs $C_{e1}=0.7710$ and $c_0=0.84$, as reported in our paper.
+cutoffs $C_{e1}=0.7710$ and $c_0=0.81$, as reported in our paper.
 
 ##### 3. Run COCA Design
 
@@ -181,7 +173,7 @@ The `COCA.getOC` function is used to obtain the operating
 characteristics of stage 1 (selection and expected sample size) and
 stage 2 (power, GP, SR, OSR, and expected sample size) of COCA. So far,
 we have obtained the optimal design parameters: `n.stage2 = 38`,
-`Ce = 0.7710`, and `c0 = 0.84`. To assess the design performance, we
+`Ce = 0.7710`, and `c0 = 0.81`. To assess the design performance, we
 still need to specify the true efficacy and toxicity rates. Using the
 observed trial outcomes: the toxicity rates in the four arms (T vs. D
 vs. T300+D vs. T75+D) were 24.6%, 10.9%, 17.6%, and 14.6%, and efficacy
@@ -214,8 +206,8 @@ the design operating characteristics:
 
 ``` r
 COCA.getOC(
-  case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.84, 
-  dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
+  case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.81, nlook.stage1 = 2, 
+  nlook.stage2 = 2, dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
   dosage.singleB = dosage.singleB,  dosage.comb = dosage.comb,
   tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
   tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
@@ -252,14 +244,14 @@ If the ORRs of the combinations in stage 1 are 5% higher than the stage
 ``` r
 eff.AB.s1 <- c(0.240, 0.095) + 0.05
 COCA.getOC(
-  case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.84, 
-  dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
+  case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.81, nlook.stage1 = 2, 
+  nlook.stage2 = 2, dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
   dosage.singleB = dosage.singleB,  dosage.comb = dosage.comb,
   tox.SOC = tox.SOC, eff.SOC = eff.SOC, tox.B = tox.B, eff.B = eff.B, 
   tox.AB = tox.AB, eff.AB.s1 = eff.AB.s1, eff.AB.s2 = eff.AB.s2, 
   tox.isomat = matrix(c(2, 1), byrow = T, nrow = 1), 
   tox.upper = 0.30, eff.lower = 0.07, Cs = 0.80, Ct = 0.9, C.f1 = 0.90, C.f2 = 0.90, 
-  utility.score = c(0, 40, 60, 100), rho = 0.2, prior.sample = 1e5, seed = 1354, n.simu = 5000
+  utility.score = c(0, 40, 60, 100), rho = 0.2, prior.sample = 1e5, n.simu = 5000
   )
 ```
 
