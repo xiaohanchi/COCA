@@ -43,6 +43,7 @@ settings described in the ‘Numerical Studies’ section of paper \[1\],
 run:
 
 ``` r
+# Estimated runtime: ~5 minutes on a MacBook Air (M1, 16 GB RAM)
 COCA.calibration(
   case = 1, n.stage1 = 24, n.stage2 = seq(20, 30, 2), 
   dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300, 
@@ -54,14 +55,30 @@ COCA.calibration(
 )
 ```
 
-For more accurate calibration, consider increasing `prior.sample` to
-$10^6$ and setting `n.simu` to $10^4$, though this may require
-additional computation time. If the power or success rate does not reach
-the target, increase `n.stage2` and rerun the calibration. **To fully
-reproduce the results in our paper, please use the following inputs:
+If the power or success rate does not reach the target, increase
+`n.stage2` and rerun the calibration. **To fully reproduce the results
+in our paper, please use the following inputs:
 `period.effect = seq(-0.1, 0.5, 0.05)`, `prior.sample = 1e6`, and
 `n.simu = 1e4`, while keeping all other inputs unchanged. For other
 trial cases, please use `case = 2` or `case = 3` as appropriate.**
+
+> **NOTE:** The above example is a simplified, lighter version of the
+> calibration procedure designed to facilitate user testing, using fewer
+> prior samples and simulations. The full calibration procedure is
+> time-consuming, as it requires identifying a suitable sample size
+> `n.stage2` while controlling the maximum type I error inflation across
+> a range of potential period effects. To reproduce our results, one
+> must perform finer prior sampling and use a large number of simulation
+> replications (e.g., increase `prior.sample` to $10^6$ and setting
+> `n.simu` to $10^4$). On a MacBook Air (Apple M1 chip, 16 GB RAM),
+> running 10,000 replicated studies for a given sample size and true
+> probability scenario (e.g., $H_0$ or $H_1$) takes approximately 20 to
+> 30 minutes. Since our calibration involves exploring a range of
+> candidate sample sizes across multiple true scenarios, the entire
+> process typically takes 12 to 16 hours. In our paper, we used a
+> high-performance computing cluster (Seadragon, the MD Anderson
+> research cluster) for the calibration. With 200 parallel jobs, the
+> complete process takes approximately 20 to 30 minutes on average.
 
 Once the optimal `n.stage2` is found, run simulations to get the
 operating characteristics of the COCA design with the calibrated
@@ -69,6 +86,7 @@ configurations:
 
 ``` r
 # E.g., scenario 1 (period effect = 0)
+# Estimated runtime: ~13 minutes on a MacBook Air (M1, 16 GB RAM)
 COCA.getOC(
   case = 1, n.stage1 = 24, n.stage2 = 26, Ce = 0.9152, c0 = 0.66, nlook.stage1 = 2, 
   nlook.stage2 = 2, dosage.ctrl = c(A = 0, B = 0), dosage.singleA = 300, dosage.singleB = 300,
@@ -154,6 +172,7 @@ increase in the stage 2 sample size. We would like to assume
 range of 32 to 40:
 
 ``` r
+# Estimated runtime: ~13 hours on a MacBook Air (M1, 16 GB RAM)
 COCA.calibration(
     case = 2, n.stage1 = 24, n.stage2 = seq(32, 40, 2), 
     dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
@@ -170,13 +189,11 @@ COCA.calibration(
     #>   <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl>
     #> 1     2       38 0.771  0.81 0.914   0.1
 
-This code may take a while to run… (Note: In my own implementation, I
-used high-performance computing clusters and parallel computing to
-accelerate the process.) For illustration, consider using a smaller
-number of prior draws (e.g., `prior.sample = 1e5`) and simulation
-replicates (e.g., `n.simu = 1000`) to reduce runtime. Once completed, we
-obtained the optimal stage 2 sample size of 38, along with design
-cutoffs $C_{e1}=0.7710$ and $c_0=0.81$, as reported in our paper.
+This code may take a while to run… For illustration, consider using a
+smaller number of prior draws (e.g., `prior.sample = 1e5`) and
+simulation replicates (e.g., `n.simu = 1000`) to reduce runtime. Once
+completed, we obtained the optimal stage 2 sample size of 38, along with
+design cutoffs $C_{e1}=0.7710$ and $c_0=0.81$, as reported in our paper.
 
 ##### 3. Run COCA Design
 
@@ -216,6 +233,7 @@ First, let’s assume no period effect between stages 1 and 2 and obtain
 the design operating characteristics:
 
 ``` r
+# Estimated runtime: ~9 minutes on a MacBook Air (M1, 16 GB RAM)
 COCA.getOC(
   case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.81, nlook.stage1 = 2, 
   nlook.stage2 = 2, dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
@@ -253,6 +271,7 @@ If the ORRs of the combinations in stage 1 are 5% higher than the stage
 2 rates (i.e., period effect = 0.05), run:
 
 ``` r
+# Estimated runtime: ~9 minutes on a MacBook Air (M1, 16 GB RAM)
 eff.AB.s1 <- c(0.240, 0.095) + 0.05
 COCA.getOC(
   case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.81, nlook.stage1 = 2, 
@@ -290,8 +309,7 @@ provided at the end of the script.
 
 \[1\]. Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+).
 COCA: A Randomized Bayesian Design Integrating Dose Optimization and
-Component Contribution Assessment for Combination Therapies. Under Minor
-Revision in *Biometrics*.  
+Component Contribution Assessment for Combination Therapies.  
 \[2\]. Kelley, R. K., Sangro, B., Harris, W., et al. Safety, Efficacy,
 and Pharmacodynamics of Tremelimumab Plus Durvalumab for Patients With
 Unresectable Hepatocellular Carcinoma: Randomized Expansion of a Phase
