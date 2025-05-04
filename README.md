@@ -16,7 +16,11 @@ combination doses. In stage 2, a multi-arm randomized phase is initiated
 to evaluate the contribution of each component within the combination
 therapy.
 
+<div style="text-align: center;">
+
 <img src="./man/figures/flowchart_v0.png" width="80%"/>
+
+</div>
 
 ### Installation
 
@@ -63,22 +67,24 @@ in our paper, please use the following inputs:
 trial cases, please use `case = 2` or `case = 3` as appropriate.**
 
 > **NOTE:** The above example is a simplified version with fewer prior
-> samples and simulations to facilitate user testing. The full
-> calibration procedure is time-consuming, as it requires identifying a
-> suitable sample size `n.stage2` while controlling the maximum type I
-> error inflation across a range of potential period effects. To
-> reproduce our results, finer prior sampling and a larger number of
-> simulation replications are required (e.g., increase `prior.sample` to
-> $10^6$ and setting `n.simu` to $10^4$). On a MacBook Air (Apple M1
-> chip, 16 GB RAM), running 10,000 replicated studies for a given sample
-> size and true probability scenario (e.g., $H_0$ or $H_1$) takes
-> approximately 20 to 30 minutes. Since our calibration involves
-> exploring a range of candidate sample sizes across multiple true
-> scenarios, the entire process typically takes 12 to 16 hours. In our
-> paper, we used a high-performance computing cluster (Seadragon, the MD
-> Anderson research cluster) for the calibration. With 200 parallel
-> jobs, the complete process takes approximately 20 to 30 minutes on
-> average.
+> samples and simulations to facilitate user testing. Please note that
+> Monte Carlo error may be non-negligible if the number of simulations
+> is not sufficiently large.  
+> The full calibration procedure is time-consuming, as it requires
+> identifying a suitable sample size `n.stage2` while controlling the
+> maximum type I error inflation across a range of potential period
+> effects. To reproduce our results, finer prior sampling and a larger
+> number of simulation replications are required (e.g., increase
+> `prior.sample` to $10^6$ and setting `n.simu` to $10^4$). On a MacBook
+> Air (Apple M1 chip, 16 GB RAM), running 10,000 replicated studies for
+> a given sample size and true probability scenario (e.g., $H_0$ or
+> $H_1$) takes approximately 20 to 30 minutes. Since our calibration
+> involves exploring a range of candidate sample sizes across multiple
+> true scenarios, the entire process typically takes 12 to 16 hours. In
+> our paper, we used a high-performance computing cluster (Seadragon,
+> the MD Anderson research cluster) for the calibration. With 200
+> parallel jobs, the complete process takes approximately 20 to 30
+> minutes on average.
 
 Once the optimal `n.stage2` is found, run simulations to get the
 operating characteristics of the COCA design with the calibrated
@@ -139,7 +145,7 @@ dosage as the dosage input for each arm:
 
 ``` r
 dosage.ctrl = c(A = log(750), B = 0)
-dosage.singleA = 0 #Set to zero since single agent A is considered as the control arm
+dosage.singleA = 0 # Set to zero since single agent A is considered as the control arm
 dosage.singleB = log(1500) 
 dosage.comb = list(A = c(log(300), log(75)), B = c(log(1500), log(1500)))
 ```
@@ -189,7 +195,7 @@ COCA.calibration(
     #>   <dbl>    <dbl> <dbl> <dbl> <dbl> <dbl>
     #> 1     2       38 0.771  0.81 0.914   0.1
 
-This code may take a while to run… For illustration, consider using a
+(This code may take a while to run…) For illustration, consider using a
 smaller number of prior draws (e.g., `prior.sample = 1e5`) and
 simulation replicates (e.g., `n.simu = 1000`) to reduce runtime. Once
 completed, we obtained the optimal stage 2 sample size of 38, along with
@@ -233,7 +239,7 @@ First, let’s assume no period effect between stages 1 and 2 and obtain
 the design operating characteristics:
 
 ``` r
-# Estimated runtime: ~9 minutes on a MacBook Air (M1, 16 GB RAM)
+# Estimated runtime: ~10 minutes on a MacBook Air (M1, 16 GB RAM)
 COCA.getOC(
   case = 2, n.stage1 = 24, n.stage2 = 38, Ce = 0.7710, c0 = 0.81, nlook.stage1 = 2, 
   nlook.stage2 = 2, dosage.ctrl = dosage.ctrl, dosage.singleA = 0, 
@@ -305,7 +311,7 @@ open_example("dunnett.R")
 Detailed instructions for reproducing the results in paper \[1\] are
 provided at the end of the script.
 
-### Reference
+### References
 
 \[1\]. Chi, X., Lin, R.<sup>\*</sup>, Yuan, Y.<sup>\*</sup> (2025+).
 COCA: A Randomized Bayesian Design Integrating Dose Optimization and
