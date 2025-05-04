@@ -16,11 +16,9 @@ combination doses. In stage 2, a multi-arm randomized phase is initiated
 to evaluate the contribution of each component within the combination
 therapy.
 
-<div style="text-align: center;">
-
+<p align="center">
 <img src="./man/figures/flowchart_v0.png" width="80%"/>
-
-</div>
+</p>
 
 ### Installation
 
